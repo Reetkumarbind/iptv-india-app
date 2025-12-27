@@ -1,0 +1,8 @@
+{
+  "name": "India IPTV Streamer",
+  "description": "A premium web-based IPTV player specifically curated for Indian channels, featuring a modern UI, channel search, and seamless HLS playback.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
