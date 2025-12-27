@@ -19,7 +19,8 @@ import {
   Sparkles,
   Heart,
   Tags,
-  FilterX
+  FilterX,
+  Plus
 } from 'lucide-react';
 
 interface ChannelGalleryProps {
@@ -50,6 +51,10 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
   
+  // Pagination State
+  const getInitialCount = () => (window.innerWidth < 640 ? 6 : 12);
+  const [visibleCount, setVisibleCount] = useState(getInitialCount());
+  
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const categoryRef = useRef<HTMLDivElement>(null);
 
@@ -62,6 +67,11 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setVisibleCount(getInitialCount());
+  }, [searchTerm, selectedGroup, showOnlyFavorites, sortOrder]);
 
   const groups = useMemo(() => {
     const rawGroups = new Set<string>();
@@ -93,13 +103,21 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
         return matchesSearch && matchesGroup && matchesFavorite;
       });
 
-    if (sortOrder === 'name-asc') result.sort((a, b) => a.name.compare(b.name));
-    else if (sortOrder === 'name-desc') result.sort((a, b) => b.name.compare(a.name));
-    else if (sortOrder === 'group-asc') result.sort((a, b) => (a.group || '').compare(b.group || ''));
-    else if (sortOrder === 'group-desc') result.sort((a, b) => (b.group || '').compare(a.group || ''));
+    if (sortOrder === 'name-asc') result.sort((a, b) => a.name.localeCompare(b.name));
+    else if (sortOrder === 'name-desc') result.sort((a, b) => b.name.localeCompare(a.name));
+    else if (sortOrder === 'group-asc') result.sort((a, b) => (a.group || '').localeCompare(b.group || ''));
+    else if (sortOrder === 'group-desc') result.sort((a, b) => (b.group || '').localeCompare(a.group || ''));
 
     return result;
   }, [channels, searchTerm, selectedGroup, favorites, sortOrder, showOnlyFavorites]);
+
+  const visibleChannels = useMemo(() => {
+    return filteredChannels.slice(0, visibleCount);
+  }, [filteredChannels, visibleCount]);
+
+  const handleLoadMore = () => {
+    setVisibleCount(prev => prev + (window.innerWidth < 640 ? 12 : 24));
+  };
 
   const resetFilters = () => {
     setSelectedGroup('All');
@@ -258,7 +276,7 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
               {showOnlyFavorites ? 'Saved Collection' : 'Channel Library'}
             </h2>
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1">
-              Showing {filteredChannels.length} results
+              Showing {visibleChannels.length} of {filteredChannels.length} results
             </p>
           </div>
           {(selectedGroup !== 'All' || searchTerm || sortOrder !== 'none') && (
@@ -273,18 +291,37 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
         </div>
 
         {filteredChannels.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
-            {filteredChannels.map((channel) => (
-              <ChannelCard
-                key={channel.id + channel.originalIndex}
-                channel={channel}
-                isActive={false}
-                isFavorite={favorites.has(channel.id)}
-                onClick={() => onSelect(channel.originalIndex)}
-                onToggleFavorite={() => onToggleFavorite(channel.id)}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
+              {visibleChannels.map((channel) => (
+                <ChannelCard
+                  key={channel.id + channel.originalIndex}
+                  channel={channel}
+                  isActive={false}
+                  isFavorite={favorites.has(channel.id)}
+                  onClick={() => onSelect(channel.originalIndex)}
+                  onToggleFavorite={() => onToggleFavorite(channel.id)}
+                />
+              ))}
+            </div>
+
+            {/* Load More Button */}
+            {visibleCount < filteredChannels.length && (
+              <div className="mt-16 flex justify-center">
+                <button
+                  onClick={handleLoadMore}
+                  className="group relative flex items-center gap-3 px-10 py-5 bg-slate-900 border border-white/10 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.2em] text-white overflow-hidden transition-all hover:border-blue-500/50 hover:shadow-2xl hover:shadow-blue-600/10 active:scale-95"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                  <Plus size={16} className="text-blue-500 group-hover:rotate-90 transition-transform duration-500" />
+                  Load More Channels
+                  <span className="ml-2 px-2 py-1 bg-slate-800 rounded-lg text-slate-400 group-hover:text-white transition-colors">
+                    {filteredChannels.length - visibleCount} Left
+                  </span>
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center py-32 px-6 text-center animate-in fade-in zoom-in duration-500">
             <div className="relative mb-8">
