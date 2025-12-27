@@ -18,7 +18,8 @@ import {
   SortAsc, 
   Sparkles,
   Heart,
-  Tags
+  Tags,
+  FilterX
 } from 'lucide-react';
 
 interface ChannelGalleryProps {
@@ -92,13 +93,20 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
         return matchesSearch && matchesGroup && matchesFavorite;
       });
 
-    if (sortOrder === 'name-asc') result.sort((a, b) => a.name.localeCompare(b.name));
-    else if (sortOrder === 'name-desc') result.sort((a, b) => b.name.localeCompare(a.name));
-    else if (sortOrder === 'group-asc') result.sort((a, b) => (a.group || '').localeCompare(b.group || ''));
-    else if (sortOrder === 'group-desc') result.sort((a, b) => (b.group || '').localeCompare(a.group || ''));
+    if (sortOrder === 'name-asc') result.sort((a, b) => a.name.compare(b.name));
+    else if (sortOrder === 'name-desc') result.sort((a, b) => b.name.compare(a.name));
+    else if (sortOrder === 'group-asc') result.sort((a, b) => (a.group || '').compare(b.group || ''));
+    else if (sortOrder === 'group-desc') result.sort((a, b) => (b.group || '').compare(a.group || ''));
 
     return result;
   }, [channels, searchTerm, selectedGroup, favorites, sortOrder, showOnlyFavorites]);
+
+  const resetFilters = () => {
+    setSelectedGroup('All');
+    setSearchTerm('');
+    setSortOrder('none');
+    setShowOnlyFavorites(false);
+  };
 
   const cycleSort = () => {
     const cycle: Record<SortOrder, SortOrder> = {
@@ -140,7 +148,7 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
             <Tv size={24} strokeWidth={2.5} />
           </div>
           <h1 className="text-2xl sm:text-4xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-slate-400 uppercase leading-none">
-            FREE TV CHANAL
+            FREE TV CHANAL FOR YOU
           </h1>
         </div>
         <p className="text-slate-500 max-w-xl text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] opacity-80">
@@ -150,106 +158,116 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
 
       {/* Mobbin-style Sticky Controls */}
       <div className="sticky top-0 z-50 px-4 sm:px-8 py-3 bg-slate-950/80 backdrop-blur-2xl border-b border-white/5">
-        <div className="w-full max-w-6xl mx-auto space-y-2">
-          {/* Search Bar */}
-          <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-500 transition-colors" size={18} />
-            <input
-              type="text"
-              placeholder="Search channels..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-900/50 border border-white/5 rounded-2xl py-3.5 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all text-slate-100 placeholder:text-slate-600"
-            />
-            {searchTerm && (
-              <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors p-1">
-                <X size={16} />
-              </button>
-            )}
+        <div className="w-full max-w-6xl mx-auto space-y-4">
+          
+          {/* Main View Toggle - Prominent Tab Bar */}
+          <div className="flex p-1 bg-slate-900/80 rounded-2xl border border-white/5 w-full sm:w-fit mx-auto">
+            <button 
+              onClick={() => setShowOnlyFavorites(false)}
+              className={`flex-1 sm:flex-none px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 ${!showOnlyFavorites ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+            >
+              <LayoutGrid size={14} />
+              All Channels
+            </button>
+            <button 
+              onClick={() => setShowOnlyFavorites(true)}
+              className={`flex-1 sm:flex-none px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 ${showOnlyFavorites ? 'bg-red-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+            >
+              <Heart size={14} fill={showOnlyFavorites ? "currentColor" : "none"} />
+              My Favorites
+              {favorites.size > 0 && <span className={`ml-1 px-1.5 py-0.5 rounded-md text-[8px] ${showOnlyFavorites ? 'bg-red-400/30' : 'bg-slate-800'}`}>{favorites.size}</span>}
+            </button>
           </div>
 
-          {/* Quick Filter Actions */}
-          <div className="flex overflow-x-auto no-scrollbar gap-2 pb-1 -mx-2 px-2">
-            <button
-              onClick={() => setShowOnlyFavorites(!showOnlyFavorites)}
-              className={`flex-shrink-0 flex items-center gap-2 px-4 py-3 rounded-xl transition-all duration-300 font-black text-[10px] uppercase tracking-wider ${
-                showOnlyFavorites 
-                  ? 'bg-amber-400 text-slate-950 shadow-lg shadow-amber-400/20' 
-                  : 'bg-slate-900/50 border border-white/5 text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Heart size={14} fill={showOnlyFavorites ? "currentColor" : "none"} className={showOnlyFavorites ? "" : "text-amber-400/50"} />
-              Saved
-            </button>
-
-            <div className="relative flex-shrink-0" ref={categoryRef}>
-              <button
-                onClick={() => setIsCategoryOpen(!isCategoryOpen)}
-                className="flex items-center gap-2 bg-slate-900/50 border border-white/5 rounded-xl py-3 px-4 text-[10px] font-black uppercase tracking-wider transition text-slate-200"
-              >
-                <SelectedIcon size={14} className="text-blue-500" />
-                {selectedGroup === 'All' ? 'Categories' : selectedGroup}
-                <ChevronDown size={12} className={`text-slate-500 transition-transform ${isCategoryOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {isCategoryOpen && (
-                <div className="absolute top-full left-0 mt-2 w-56 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl py-2 z-[60] max-h-80 overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
-                  {groups.map((group) => {
-                    const Icon = getCategoryIcon(group);
-                    return (
-                      <button
-                        key={group}
-                        onClick={() => {
-                          setSelectedGroup(group);
-                          setIsCategoryOpen(false);
-                        }}
-                        className={`w-full px-5 py-3 flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-left transition-colors ${
-                          selectedGroup === group ? 'bg-blue-600/20 text-blue-400' : 'text-slate-300 hover:bg-white/5'
-                        }`}
-                      >
-                        <Icon size={16} className={selectedGroup === group ? 'text-blue-400' : 'text-slate-500'} />
-                        {group}
-                      </button>
-                    );
-                  })}
-                </div>
+          <div className="flex flex-col sm:flex-row gap-2">
+            {/* Search Bar */}
+            <div className="relative group flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-500 transition-colors" size={18} />
+              <input
+                type="text"
+                placeholder="Find a stream..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-slate-900/50 border border-white/5 rounded-2xl py-3.5 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all text-slate-100 placeholder:text-slate-600"
+              />
+              {searchTerm && (
+                <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors p-1">
+                  <X size={16} />
+                </button>
               )}
             </div>
 
-            <button
-              onClick={cycleSort}
-              className={`flex-shrink-0 flex items-center gap-2 px-4 py-3 rounded-xl transition-all duration-300 font-black text-[10px] uppercase tracking-wider ${
-                sortOrder !== 'none' ? 'bg-blue-600 text-white shadow-lg' : 'bg-slate-900/50 border border-white/5 text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              {sortOrder.includes('group') ? <Tags size={14} /> : <SortAsc size={14} />}
-              {getSortLabel()}
-            </button>
+            {/* Sub-Filters Container */}
+            <div className="flex gap-2">
+              <div className="relative flex-1 sm:flex-none sm:min-w-[160px]" ref={categoryRef}>
+                <button
+                  onClick={() => setIsCategoryOpen(!isCategoryOpen)}
+                  className="w-full flex items-center justify-between gap-2 bg-slate-900/50 border border-white/5 rounded-xl py-3.5 px-4 text-[10px] font-black uppercase tracking-wider transition text-slate-200"
+                >
+                  <div className="flex items-center gap-2">
+                    <SelectedIcon size={14} className="text-blue-500" />
+                    {selectedGroup === 'All' ? 'Categories' : selectedGroup}
+                  </div>
+                  <ChevronDown size={12} className={`text-slate-500 transition-transform ${isCategoryOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {isCategoryOpen && (
+                  <div className="absolute top-full right-0 sm:left-0 mt-2 w-56 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl py-2 z-[60] max-h-80 overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
+                    {groups.map((group) => {
+                      const Icon = getCategoryIcon(group);
+                      return (
+                        <button
+                          key={group}
+                          onClick={() => {
+                            setSelectedGroup(group);
+                            setIsCategoryOpen(false);
+                          }}
+                          className={`w-full px-5 py-3 flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-left transition-colors ${
+                            selectedGroup === group ? 'bg-blue-600/20 text-blue-400' : 'text-slate-300 hover:bg-white/5'
+                          }`}
+                        >
+                          <Icon size={16} className={selectedGroup === group ? 'text-blue-400' : 'text-slate-500'} />
+                          {group}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={cycleSort}
+                className={`flex-shrink-0 flex items-center gap-2 px-4 py-3.5 rounded-xl transition-all duration-300 font-black text-[10px] uppercase tracking-wider ${
+                  sortOrder !== 'none' ? 'bg-blue-600 text-white shadow-lg' : 'bg-slate-900/50 border border-white/5 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                {sortOrder.includes('group') ? <Tags size={14} /> : <SortAsc size={14} />}
+                {getSortLabel()}
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Main Content Area */}
       <div className="px-6 pb-24 max-w-7xl mx-auto w-full mt-8">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-6">
           <div className="flex flex-col">
-            <h2 className="text-lg sm:text-2xl font-black text-white uppercase tracking-tighter">
-              {showOnlyFavorites ? 'Your Collection' : 'Live Streams'}
+            <h2 className="text-lg sm:text-2xl font-black text-white uppercase tracking-tighter flex items-center gap-3">
+              {showOnlyFavorites ? <Heart className="text-red-600" fill="currentColor" size={24} /> : <LayoutGrid className="text-blue-500" size={24} />}
+              {showOnlyFavorites ? 'Saved Collection' : 'Channel Library'}
             </h2>
-            <div className="h-1 w-12 bg-blue-600 rounded-full mt-1" />
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1">
+              Showing {filteredChannels.length} results
+            </p>
           </div>
-          {(selectedGroup !== 'All' || searchTerm || sortOrder !== 'none' || showOnlyFavorites) && (
+          {(selectedGroup !== 'All' || searchTerm || sortOrder !== 'none') && (
             <button 
-              onClick={() => { 
-                setSelectedGroup('All'); 
-                setSearchTerm(''); 
-                setSortOrder('none');
-                setShowOnlyFavorites(false);
-              }}
-              className="text-[10px] text-blue-500 font-black uppercase tracking-widest flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-500/5 border border-blue-500/10"
+              onClick={resetFilters}
+              className="text-[10px] text-blue-500 font-black uppercase tracking-widest flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-500/5 border border-blue-500/10 active:scale-95 transition-transform"
             >
               <X size={12} />
-              Reset
+              Reset filters
             </button>
           )}
         </div>
@@ -268,16 +286,32 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-32 text-slate-500 text-center">
-            <div className="w-20 h-20 bg-slate-900 rounded-3xl flex items-center justify-center mb-6 border border-white/5">
-              <Search size={32} className="opacity-10" />
+          <div className="flex flex-col items-center justify-center py-32 px-6 text-center animate-in fade-in zoom-in duration-500">
+            <div className="relative mb-8">
+              <div className="w-24 h-24 sm:w-32 sm:h-32 bg-slate-900 rounded-[2.5rem] flex items-center justify-center border border-white/5 shadow-inner">
+                <FilterX size={48} className="text-slate-800" strokeWidth={1.5} />
+              </div>
+              <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-red-600 rounded-2xl flex items-center justify-center text-white shadow-xl">
+                {showOnlyFavorites ? <Heart size={20} fill="currentColor" /> : <Search size={20} />}
+              </div>
             </div>
-            <h3 className="text-xl font-black text-slate-300 uppercase tracking-tight mb-2">Empty Library</h3>
-            <p className="max-w-xs mx-auto text-slate-600 text-xs font-bold uppercase tracking-wider">
+            
+            <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-3">
+              {showOnlyFavorites ? 'No favorites yet' : 'No results found'}
+            </h3>
+            <p className="max-w-xs mx-auto text-slate-500 text-sm font-medium mb-10 leading-relaxed">
               {showOnlyFavorites 
-                ? "No channels saved yet." 
-                : "No matching results."}
+                ? "Browse our channel library and save your favorite streams for quick access." 
+                : "We couldn't find any channels matching your current search criteria."}
             </p>
+
+            <button 
+              onClick={showOnlyFavorites ? () => setShowOnlyFavorites(false) : resetFilters}
+              className="px-10 py-4 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl shadow-blue-600/20 hover:bg-blue-500 active:scale-95 transition-all flex items-center gap-3"
+            >
+              {showOnlyFavorites ? <LayoutGrid size={14} strokeWidth={3} /> : <X size={14} strokeWidth={3} />}
+              {showOnlyFavorites ? 'Browse Library' : 'Reset Search'}
+            </button>
           </div>
         )}
       </div>

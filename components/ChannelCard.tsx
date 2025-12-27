@@ -12,7 +12,7 @@ import {
   Tv, 
   Sparkles, 
   LayoutGrid,
-  X
+  Loader2
 } from 'lucide-react';
 
 interface ChannelCardProps {
@@ -36,6 +36,7 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
 
 const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite, onClick, onToggleFavorite }) => {
   const [imgError, setImgError] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
 
   const GroupIcon = CATEGORY_ICONS[channel.group] || CATEGORY_ICONS['Other'];
@@ -59,13 +60,25 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
         onClick={onClick}
         className="w-full h-full flex flex-col text-left"
       >
-        {/* Logo Container */}
+        {/* Logo Container with Lazy Loading & Placeholder */}
         <div className="relative flex-1 w-full flex items-center justify-center p-6 bg-gradient-to-br from-slate-800/20 to-transparent transition-all duration-700 group-hover:bg-slate-800/40">
+          
+          {/* Loading Spinner for large images */}
+          {channel.logo && !imgLoaded && !imgError && (
+            <div className="absolute inset-0 flex items-center justify-center opacity-20">
+              <Loader2 className="animate-spin text-slate-500" size={24} />
+            </div>
+          )}
+
           {channel.logo && !imgError ? (
             <img 
               src={channel.logo} 
-              alt="" 
-              className="w-[80%] h-[80%] object-contain filter drop-shadow-2xl transition-all duration-700 group-hover:scale-110"
+              alt={channel.name}
+              loading="lazy"
+              onLoad={() => setImgLoaded(true)}
+              className={`w-[85%] h-[85%] object-contain filter drop-shadow-2xl transition-all duration-700 group-hover:scale-110 ${
+                imgLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+              }`}
               onError={() => setImgError(true)}
             />
           ) : (
@@ -74,7 +87,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
             </div>
           )}
           
-          {/* Play Icon */}
+          {/* Play Overlay */}
           <div className="absolute inset-0 bg-slate-950/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
              <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center text-blue-600 shadow-2xl scale-50 group-hover:scale-100 transition-transform duration-500">
                 <Play size={28} fill="currentColor" className="ml-1" />
@@ -95,14 +108,15 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
         </div>
       </button>
 
-      {/* Favorite Button */}
+      {/* Favorite Button - Red themed if active */}
       <button
         onClick={handleToggleFavorite}
         className={`absolute top-4 right-4 p-2.5 rounded-full transition-all duration-300 transform active:scale-90 ${
           isFavorite 
-            ? 'bg-amber-400 text-slate-950 shadow-lg shadow-amber-400/20 scale-100' 
-            : 'bg-black/60 text-white/40 scale-90 hover:scale-100 hover:text-white backdrop-blur-md'
+            ? 'bg-red-600 text-white shadow-lg shadow-red-600/30 scale-110' 
+            : 'bg-black/60 text-white/40 scale-90 hover:scale-100 hover:text-white backdrop-blur-md border border-white/5'
         }`}
+        title={isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
       >
         <Star size={16} fill={isFavorite ? "currentColor" : "none"} strokeWidth={3} />
       </button>
@@ -111,9 +125,9 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
       {showFeedback && (
         <div className="absolute inset-x-4 top-4 pointer-events-none animate-in fade-in slide-in-from-top-4 duration-500">
           <div className={`flex items-center justify-center gap-2 px-3 py-2 rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] shadow-2xl backdrop-blur-xl border border-white/10 ${
-            isFavorite ? 'bg-amber-400 text-slate-950 border-amber-500' : 'bg-slate-800 text-white'
+            isFavorite ? 'bg-red-600 text-white' : 'bg-slate-800 text-white'
           }`}>
-            {isFavorite ? 'Saved' : 'Removed'}
+            {isFavorite ? 'Added to Saved' : 'Removed'}
           </div>
         </div>
       )}
