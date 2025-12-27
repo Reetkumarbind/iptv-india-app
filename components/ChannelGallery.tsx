@@ -1,9 +1,9 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { IPTVChannel } from '../types';
-import ChannelCard from './ChannelCard';
-import Footer from './Footer';
-import ScrollToTop from './ScrollToTop';
+import { IPTVChannel } from '../types.ts';
+import ChannelCard from './ChannelCard.tsx';
+import Footer from './Footer.tsx';
+import ScrollToTop from './ScrollToTop.tsx';
 import { 
   Search, 
   Tv, 
@@ -121,17 +121,18 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
     }
   };
 
-  const SelectedIcon = getCategoryIcon(selectedGroup);
-  function getCategoryIcon(group: string) {
+  const getCategoryIcon = (group: string) => {
     if (group === 'All') return LayoutGrid;
     return CATEGORY_CONFIG[group]?.icon || LayoutGrid;
-  }
+  };
+
+  const SelectedIcon = getCategoryIcon(selectedGroup);
 
   return (
     <div ref={scrollContainerRef} className="h-full w-full flex flex-col bg-slate-950 overflow-y-auto scroll-smooth">
       <ScrollToTop containerRef={scrollContainerRef} />
       
-      {/* Hero Branding - Optimized for Mobile Padding */}
+      {/* Hero Branding */}
       <div className="relative pt-12 pb-6 px-6 flex flex-col items-center text-center flex-shrink-0">
         <div className="absolute inset-0 bg-gradient-to-b from-blue-600/10 to-transparent pointer-events-none" />
         <div className="flex items-center gap-3 mb-4">
@@ -167,7 +168,7 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
             )}
           </div>
 
-          {/* Quick Filter Actions - Horizontal Scroll on Mobile */}
+          {/* Quick Filter Actions */}
           <div className="flex overflow-x-auto no-scrollbar gap-2 pb-1 -mx-2 px-2">
             <button
               onClick={() => setShowOnlyFavorites(!showOnlyFavorites)}

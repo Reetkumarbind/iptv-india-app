@@ -1,5 +1,5 @@
 
-import { IPTVChannel } from '../types';
+import { IPTVChannel } from '../types.ts';
 
 export const fetchAndParseM3U = async (url: string): Promise<IPTVChannel[]> => {
   let text = '';

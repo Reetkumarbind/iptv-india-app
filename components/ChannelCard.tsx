@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { IPTVChannel } from '../types';
+import { IPTVChannel } from '../types.ts';
 import { 
   Play, 
   Star, 
@@ -74,7 +74,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
             </div>
           )}
           
-          {/* Play Icon Hidden by default, shown on hover/active */}
+          {/* Play Icon */}
           <div className="absolute inset-0 bg-slate-950/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
              <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center text-blue-600 shadow-2xl scale-50 group-hover:scale-100 transition-transform duration-500">
                 <Play size={28} fill="currentColor" className="ml-1" />
@@ -82,7 +82,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
           </div>
         </div>
         
-        {/* Title Area - Fixed height for alignment */}
+        {/* Title Area */}
         <div className="px-5 pb-5 pt-2">
           <h3 className="text-xs sm:text-sm font-black text-slate-100 truncate mb-1 uppercase tracking-tight">
             {channel.name}
@@ -95,7 +95,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
         </div>
       </button>
 
-      {/* Mobbin-style Floating Action Button for Favorite */}
+      {/* Favorite Button */}
       <button
         onClick={handleToggleFavorite}
         className={`absolute top-4 right-4 p-2.5 rounded-full transition-all duration-300 transform active:scale-90 ${
@@ -107,7 +107,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
         <Star size={16} fill={isFavorite ? "currentColor" : "none"} strokeWidth={3} />
       </button>
 
-      {/* Elegant Toast Feedback */}
+      {/* Toast Feedback */}
       {showFeedback && (
         <div className="absolute inset-x-4 top-4 pointer-events-none animate-in fade-in slide-in-from-top-4 duration-500">
           <div className={`flex items-center justify-center gap-2 px-3 py-2 rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] shadow-2xl backdrop-blur-xl border border-white/10 ${

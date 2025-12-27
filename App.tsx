@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { IPTVChannel } from './types';
-import { fetchAndParseM3U } from './services/m3uParser';
-import ChannelGallery from './components/ChannelGallery';
-import VideoPlayer from './components/VideoPlayer';
+import { IPTVChannel } from './types.ts';
+import { fetchAndParseM3U } from './services/m3uParser.ts';
+import ChannelGallery from './components/ChannelGallery.tsx';
+import VideoPlayer from './components/VideoPlayer.tsx';
 import { Loader2, AlertCircle, ChevronLeft } from 'lucide-react';
 
 const M3U_URL = 'https://iptv-org.github.io/iptv/countries/in.m3u';

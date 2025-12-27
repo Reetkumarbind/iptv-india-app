@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
-import { IPTVChannel } from '../types';
+import { IPTVChannel } from '../types.ts';
 import { 
   Play, 
   Pause, 
@@ -121,7 +121,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ channel, isFavorite, onToggle
         playsInline
       />
 
-      {/* Top Bar Controls - Back Button etc */}
+      {/* Top Bar Controls */}
       <div className={`absolute top-0 left-0 right-0 p-6 flex items-center justify-between transition-opacity duration-500 z-50 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <div className="flex items-center gap-4 bg-slate-950/40 backdrop-blur-xl p-2 pr-6 rounded-full border border-white/5 shadow-2xl">
           <img src={channel.logo || ''} className="w-8 h-8 object-contain rounded-lg bg-white/10" alt="" onError={(e) => (e.currentTarget.style.display = 'none')} />
@@ -141,7 +141,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ channel, isFavorite, onToggle
         </button>
       </div>
 
-      {/* Loading & Error Overlays */}
+      {/* Overlays */}
       {isLoading && !error && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-20">
           <Loader2 size={48} className="animate-spin text-blue-500" />
@@ -164,21 +164,17 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ channel, isFavorite, onToggle
         </div>
       )}
 
-      {/* Cinematic Main Controls Container */}
+      {/* Cinematic Controls */}
       <div className={`absolute inset-x-0 bottom-0 p-8 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent transition-all duration-700 transform ${showControls ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0 pointer-events-none'}`}>
         <div className="max-w-4xl mx-auto flex flex-col gap-6">
-          
-          {/* Main Playback Bar */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-8">
               <button onClick={onPrevious} className="text-white/60 hover:text-white transition active:scale-90 p-2">
                 <SkipBack size={28} fill="currentColor" />
               </button>
-              
               <button onClick={togglePlay} className="w-16 h-16 bg-white text-slate-950 rounded-full flex items-center justify-center shadow-2xl active:scale-90 transition transform">
                 {isPlaying ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" className="ml-1" />}
               </button>
-              
               <button onClick={onNext} className="text-white/60 hover:text-white transition active:scale-90 p-2">
                 <SkipForward size={28} fill="currentColor" />
               </button>
