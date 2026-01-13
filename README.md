@@ -204,4 +204,4 @@ Demo: https://iptv-india-app.netlify.app
 <p data-start="3148" data-end="3274">This project is provided for <strong data-start="3177" data-end="3214">educational and personal use only</strong>.<br data-start="3215" data-end="3218" /> Please comply with local laws and streaming regulations.</p>
 <hr data-start="3276" data-end="3279" />
 <h2 data-start="3281" data-end="3290">Author</h2>
-<p data-start="3292" data-end="3354"><strong data-start="3292" data-end="3310">Pradip Nalwaya</strong><br data-start="3310" data-end="3313" /> GitHub: <a class="decorated-link" href="https://github.com/ipradipnalwaya" target="_new" rel="noopener" data-start="3321" data-end="3354">https://github.com/ipradipnalwaya</a></p>
+<p><strong data-start="3292" data-end="3310">Reet Kumar Bind</strong></p>

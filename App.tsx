@@ -66,16 +66,16 @@ const App: React.FC = () => {
     setViewMode('player');
   };
 
-  const currentChannel = useMemo(() => 
+  const currentChannel = useMemo(() =>
     currentIndex >= 0 ? channels[currentIndex] : null
-  , [channels, currentIndex]);
+    , [channels, currentIndex]);
 
   if (isLoading) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-950">
         <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-6" />
-        <h2 className="text-lg font-black tracking-[0.2em] text-white uppercase">Initializing</h2>
-        <p className="text-slate-600 mt-2 text-[10px] font-bold uppercase tracking-widest">Premium Stream Library</p>
+        <h2 className="text-xl font-black tracking-[0.2em] text-white uppercase">REET TV CHANNEL</h2>
+        <p className="text-slate-400 mt-2 text-xs font-bold uppercase tracking-widest">Premium Stream Library</p>
       </div>
     );
   }
@@ -84,11 +84,11 @@ const App: React.FC = () => {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-950 p-8 text-center">
         <div className="w-20 h-20 bg-red-500/10 rounded-3xl flex items-center justify-center mb-8">
-           <AlertCircle className="w-10 h-10 text-red-500" />
+          <AlertCircle className="w-10 h-10 text-red-500" />
         </div>
         <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">System Offline</h2>
         <p className="text-slate-500 mb-10 max-w-xs text-xs font-bold uppercase tracking-widest leading-loose">{error}</p>
-        <button 
+        <button
           onClick={() => window.location.reload()}
           className="px-10 py-4 bg-white text-slate-950 rounded-2xl transition font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl active:scale-95"
         >
@@ -101,7 +101,7 @@ const App: React.FC = () => {
   return (
     <div className="h-screen w-full overflow-hidden bg-slate-950 text-slate-100 selection:bg-blue-500/30">
       {viewMode === 'gallery' ? (
-        <ChannelGallery 
+        <ChannelGallery
           channels={channels}
           favorites={favorites}
           onSelect={handleSelectChannel}
@@ -109,18 +109,18 @@ const App: React.FC = () => {
         />
       ) : (
         <div className="h-full w-full flex flex-col relative bg-black">
-          <button 
+          <button
             onClick={() => setViewMode('gallery')}
             className="absolute top-6 left-6 z-[100] flex items-center gap-2 pr-5 pl-3 py-3 bg-black/40 hover:bg-black/60 backdrop-blur-2xl rounded-2xl border border-white/10 transition-all active:scale-90 group shadow-2xl"
           >
             <ChevronLeft size={20} className="text-white group-hover:-translate-x-1 transition-transform" strokeWidth={3} />
             <span className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Exit Player</span>
           </button>
-          
-          <VideoPlayer 
+
+          <VideoPlayer
             channel={currentChannel}
             isFavorite={currentChannel ? favorites.has(currentChannel.id) : false}
-            onToggleFavorite={currentChannel ? () => toggleFavorite(currentChannel.id) : () => {}}
+            onToggleFavorite={currentChannel ? () => toggleFavorite(currentChannel.id) : () => { }}
             onNext={handleNext}
             onPrevious={handlePrevious}
           />
