@@ -231,7 +231,7 @@ Please comply with local laws and streaming regulations.
 
 **Reet Kumar Bind**
 - Portfolio: [https://reetkumarbind-portfolio.vercel.app/](https://reetkumarbind-portfolio.vercel.app/)
-- GitHub: [@ipradipnalwaya](https://github.com/ipradipnalwaya)
+- GitHub: [@ipradipnalwaya](https://github.com/reetkumarbind@gmail.com)
 
 ## 🙏 Acknowledgments
 
