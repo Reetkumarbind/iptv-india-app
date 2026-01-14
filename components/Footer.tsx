@@ -13,15 +13,20 @@ const Footer: React.FC = () => {
             <div className="p-2 bg-red-600 rounded-lg text-black shadow-lg shadow-red-600/20">
               <Tv size={14} strokeWidth={5} />
             </div>
-            <span className="text-3xl font-black uppercase tracking-[0.3em] text-white">REET TV CHANNEL</span>
+            <span className="text-sm font-black uppercase tracking-[0.3em] text-white">REET TV CHANNEL</span>
           </div>
 
           <a
             href="https://reetkumarbind-portfolio.vercel.app/"
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex items-center gap-2 px-6 py-2.5 bg-red-600/10 border border-red-600/30 rounded-full transition-all hover:bg-red-600 hover:border-red-600 active:scale-95"
+            className="group flex items-center gap-3 px-6 py-2.5 bg-red-600/10 border border-red-600/30 rounded-full transition-all hover:bg-red-600 hover:border-red-600 active:scale-95"
           >
+            <img 
+              src="/profile.png" 
+              alt="Reet Kumar Bind" 
+              className="w-6 h-6 rounded-full border border-red-600/30"
+            />
             <span className="text-xs font-black uppercase tracking-widest text-red-500 group-hover:text-black transition-colors">Build by Reet Kumar Bind</span>
             <ExternalLink size={12} className="text-red-500 group-hover:text-black transition-colors" />
           </a>

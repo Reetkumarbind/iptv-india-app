@@ -36,15 +36,23 @@ export const fetchAndParseM3U = async (url: string): Promise<IPTVChannel[]> => {
         const idMatch = line.match(/tvg-id="([^"]*)"/);
         const langMatch = line.match(/tvg-language="([^"]*)"/);
 
+        // Basic sanitization without SecurityService
+        const name = nameMatch ? nameMatch[1].trim().replace(/[<>]/g, '') : 'Unknown Channel';
+        const logo = logoMatch ? logoMatch[1].replace(/[<>]/g, '') : null;
+        const group = groupMatch ? groupMatch[1].replace(/[<>]/g, '') : 'General';
+        const id = idMatch ? idMatch[1].replace(/[<>]/g, '') : `channel-${i}`;
+        const language = langMatch ? langMatch[1].replace(/[<>]/g, '') : 'General';
+
         currentChannel = {
-          id: idMatch ? idMatch[1] : `channel-${i}`,
-          name: nameMatch ? nameMatch[1].trim() : 'Unknown Channel',
-          logo: logoMatch ? logoMatch[1] : null,
-          group: groupMatch ? groupMatch[1] : 'General',
-          language: langMatch ? langMatch[1] : 'General',
+          id: id || `channel-${i}`,
+          name: name || 'Unknown Channel',
+          logo: logo,
+          group: group || 'General',
+          language: language || 'General',
         };
       } else if (line.startsWith('http')) {
-        if (currentChannel.name) {
+        // Basic URL validation
+        if (currentChannel.name && line.length > 10) {
           channels.push({
             ...currentChannel as IPTVChannel,
             url: line
@@ -58,6 +66,7 @@ export const fetchAndParseM3U = async (url: string): Promise<IPTVChannel[]> => {
       throw new Error('Parsing Error: No valid channels found in the playlist.');
     }
 
+    console.log(`✅ Parsed ${channels.length} valid channels`);
     return channels;
   } catch (error) {
     if (error instanceof Error && error.message.startsWith('Parsing Error')) {

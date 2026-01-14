@@ -1,15 +1,21 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { IPTVChannel } from './types.ts';
-import { fetchAndParseM3U } from './services/m3uParser.ts';
-import ChannelGallery from './components/ChannelGallery.tsx';
-import VideoPlayer from './components/VideoPlayer.tsx';
-import { Loader2, AlertCircle, ChevronLeft } from 'lucide-react';
+import { IPTVChannel, UserPreferences } from './types';
+import { fetchAndParseM3U } from './services/m3uParser';
+import { StorageService } from './services/storageService';
+import { KeyboardService } from './services/keyboardService';
+import { SecurityService } from './services/securityService';
+import ChannelGallery from './components/ChannelGallery';
+import VideoPlayer from './components/VideoPlayer';
+import SettingsPanel from './components/SettingsPanel';
+import KeyboardShortcuts from './components/KeyboardShortcuts';
+import MiniPlayer from './components/MiniPlayer';
+import SecurityIndicator from './components/SecurityIndicator';
+import { Loader2, AlertCircle, ChevronLeft, Settings, Keyboard } from 'lucide-react';
 
 const M3U_URL = 'https://iptv-org.github.io/iptv/countries/in.m3u';
-const FAVORITES_KEY = 'iptv_favorites_v1';
 
-type ViewMode = 'gallery' | 'player';
+type ViewMode = 'gallery' | 'player' | 'mini';
 
 const App: React.FC = () => {
   const [channels, setChannels] = useState<IPTVChannel[]>([]);
@@ -18,18 +24,58 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('gallery');
+  
+  // Enhanced features state
+  const [preferences, setPreferences] = useState<UserPreferences>(StorageService.getUserPreferences());
+  const [showSettings, setShowSettings] = useState(false);
+  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
+  const [keyboardService] = useState(() => new KeyboardService());
+  const [miniPlayerPosition, setMiniPlayerPosition] = useState({ x: 20, y: 20 });
+
+  // Initialize security service (optional for normal mode)
+  useEffect(() => {
+    try {
+      console.log('🔒 Initializing security service...');
+      // SecurityService.initialize(); // Disabled for normal mode
+      console.log('✅ Security service skipped for normal mode');
+    } catch (error) {
+      console.error('❌ Security service initialization failed:', error);
+      // Continue without security service if it fails
+    }
+  }, []);
 
   useEffect(() => {
     const initApp = async () => {
       try {
         setIsLoading(true);
-        const savedFavorites = localStorage.getItem(FAVORITES_KEY);
-        if (savedFavorites) {
-          try { setFavorites(new Set(JSON.parse(savedFavorites))); } catch (e) { console.error("Failed to parse favorites", e); }
-        }
+        console.log('🚀 Initializing app...');
+        
+        // Skip security validation for normal mode
+        console.log('🔍 Loading M3U URL:', M3U_URL);
+        
+        // Load favorites using StorageService
+        console.log('📂 Loading favorites...');
+        const savedFavorites = StorageService.getFavorites();
+        setFavorites(new Set(savedFavorites));
+        console.log('✅ Favorites loaded:', savedFavorites.length);
+        
+        console.log('📡 Fetching M3U playlist...');
         const data = await fetchAndParseM3U(M3U_URL);
-        setChannels(data);
+        console.log('✅ M3U data received:', data.length, 'channels');
+        
+        // Basic validation without security service
+        console.log('🔒 Basic channel validation...');
+        const validChannels = data.filter(channel => 
+          channel.url && 
+          channel.name && 
+          channel.id
+        );
+        console.log('✅ Channels validated:', validChannels.length, 'valid channels');
+        
+        setChannels(validChannels);
+        console.log('🎉 App initialization complete!');
       } catch (err) {
+        console.error('❌ App initialization failed:', err);
         setError('Connection failed. Please check your internet.');
       } finally {
         setIsLoading(false);
@@ -38,12 +84,185 @@ const App: React.FC = () => {
     initApp();
   }, []);
 
+  // Setup keyboard shortcuts
   useEffect(() => {
-    localStorage.setItem(FAVORITES_KEY, JSON.stringify(Array.from(favorites)));
+    if (!preferences.keyboardShortcuts) {
+      keyboardService.setEnabled(false);
+      return;
+    }
+
+    keyboardService.setEnabled(true);
+    keyboardService.clearShortcuts();
+
+    // Add keyboard shortcuts
+    keyboardService.addShortcut({
+      key: ' ',
+      description: 'Play/Pause',
+      action: () => {
+        if (viewMode === 'player' || viewMode === 'mini') {
+          const video = document.querySelector('video');
+          if (video) {
+            if (video.paused) {
+              video.play().catch(console.error);
+            } else {
+              video.pause();
+            }
+          }
+        }
+      }
+    });
+
+    keyboardService.addShortcut({
+      key: 'ArrowLeft',
+      description: 'Previous Channel',
+      action: () => {
+        if (viewMode === 'player' && channels.length > 0) {
+          setCurrentIndex((prev: number) => (prev - 1 + channels.length) % channels.length);
+        }
+      }
+    });
+
+    keyboardService.addShortcut({
+      key: 'ArrowRight',
+      description: 'Next Channel',
+      action: () => {
+        if (viewMode === 'player' && channels.length > 0) {
+          setCurrentIndex((prev: number) => (prev + 1) % channels.length);
+        }
+      }
+    });
+
+    keyboardService.addShortcut({
+      key: 'Escape',
+      description: 'Back to Gallery',
+      action: () => {
+        setViewMode('gallery');
+      }
+    });
+
+    keyboardService.addShortcut({
+      key: 'f',
+      description: 'Toggle Fullscreen',
+      action: () => {
+        if (viewMode === 'player') {
+          const video = document.querySelector('video');
+          if (video) {
+            const event = new MouseEvent('dblclick', {
+              bubbles: true,
+              cancelable: true,
+              view: window
+            });
+            video.dispatchEvent(event);
+          }
+        }
+      }
+    });
+
+    keyboardService.addShortcut({
+      key: 'h',
+      description: 'Toggle Favorite',
+      action: () => {
+        if (currentIndex >= 0 && channels[currentIndex]) {
+          toggleFavorite(channels[currentIndex].id);
+        }
+      }
+    });
+
+    keyboardService.addShortcut({
+      key: 'm',
+      description: 'Toggle Mute',
+      action: () => {
+        const video = document.querySelector('video');
+        if (video) {
+          video.muted = !video.muted;
+        }
+      }
+    });
+
+    keyboardService.addShortcut({
+      key: 's',
+      description: 'Settings',
+      action: () => {
+        setShowSettings(true);
+      }
+    });
+
+    keyboardService.addShortcut({
+      key: '?',
+      description: 'Show Shortcuts',
+      action: () => {
+        setShowKeyboardShortcuts(true);
+      }
+    });
+
+    keyboardService.addShortcut({
+      key: 'ArrowUp',
+      description: 'Volume Up',
+      action: () => {
+        const video = document.querySelector('video');
+        if (video) {
+          video.volume = Math.min(1, video.volume + 0.1);
+        }
+      }
+    });
+
+    keyboardService.addShortcut({
+      key: 'ArrowDown',
+      description: 'Volume Down',
+      action: () => {
+        const video = document.querySelector('video');
+        if (video) {
+          video.volume = Math.max(0, video.volume - 0.1);
+        }
+      }
+    });
+
+    return () => keyboardService.clearShortcuts();
+  }, [preferences.keyboardShortcuts, viewMode, currentIndex, channels]);
+
+  // Cleanup on unmount and save data before leaving
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Save any current watch time before leaving
+      if (currentIndex >= 0 && channels[currentIndex]) {
+        StorageService.addToWatchHistory({
+          channelId: channels[currentIndex].id,
+          channelName: channels[currentIndex].name,
+          timestamp: Date.now(),
+          duration: 3, // Minimum duration for page unload
+          logo: channels[currentIndex].logo || undefined
+        });
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      handleBeforeUnload(); // Save on component unmount
+      keyboardService.destroy();
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [keyboardService, currentIndex, channels]);
+
+  useEffect(() => {
+    // Save favorites using StorageService
+    StorageService.saveFavorites(Array.from(favorites));
   }, [favorites]);
 
+  // Handle preferences changes
+  const handlePreferencesChange = (newPreferences: UserPreferences) => {
+    setPreferences(newPreferences);
+    
+    // Apply theme
+    if (newPreferences.theme === 'light') {
+      document.documentElement.classList.add('light');
+    } else {
+      document.documentElement.classList.remove('light');
+    }
+  };
+
   const toggleFavorite = useCallback((channelId: string) => {
-    setFavorites(prev => {
+    setFavorites((prev: Set<string>) => {
       const next = new Set(prev);
       if (next.has(channelId)) next.delete(channelId);
       else next.add(channelId);
@@ -53,44 +272,92 @@ const App: React.FC = () => {
 
   const handleNext = useCallback(() => {
     if (channels.length === 0) return;
-    setCurrentIndex((prev) => (prev + 1) % channels.length);
-  }, [channels.length]);
+    // Track current channel before switching
+    if (currentIndex >= 0) {
+      const currentChannel = channels[currentIndex];
+      if (currentChannel) {
+        StorageService.addToWatchHistory({
+          channelId: currentChannel.id,
+          channelName: currentChannel.name,
+          timestamp: Date.now(),
+          duration: 5, // Minimum duration for channel switching
+          logo: currentChannel.logo || undefined
+        });
+      }
+    }
+    setCurrentIndex((prev: number) => (prev + 1) % channels.length);
+  }, [channels.length, currentIndex, channels]);
 
   const handlePrevious = useCallback(() => {
     if (channels.length === 0) return;
-    setCurrentIndex((prev) => (prev - 1 + channels.length) % channels.length);
-  }, [channels.length]);
+    // Track current channel before switching
+    if (currentIndex >= 0) {
+      const currentChannel = channels[currentIndex];
+      if (currentChannel) {
+        StorageService.addToWatchHistory({
+          channelId: currentChannel.id,
+          channelName: currentChannel.name,
+          timestamp: Date.now(),
+          duration: 5, // Minimum duration for channel switching
+          logo: currentChannel.logo || undefined
+        });
+      }
+    }
+    setCurrentIndex((prev: number) => (prev - 1 + channels.length) % channels.length);
+  }, [channels.length, currentIndex, channels]);
 
   const handleSelectChannel = (index: number) => {
+    // Track the selected channel immediately
+    if (channels[index]) {
+      StorageService.addToWatchHistory({
+        channelId: channels[index].id,
+        channelName: channels[index].name,
+        timestamp: Date.now(),
+        duration: 1, // Minimum duration for selection
+        logo: channels[index].logo || undefined
+      });
+    }
     setCurrentIndex(index);
     setViewMode('player');
+  };
+
+  const handleMinimizePlayer = () => {
+    setViewMode('mini');
+  };
+
+  const handleMaximizePlayer = () => {
+    setViewMode('player');
+  };
+
+  const handleCloseMiniPlayer = () => {
+    setViewMode('gallery');
   };
 
   const currentChannel = useMemo(() =>
     currentIndex >= 0 ? channels[currentIndex] : null
     , [channels, currentIndex]);
 
-  if (isLoading) {
+if (isLoading) {
     return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-950">
-        <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-6" />
-        <h2 className="text-xl font-black tracking-[0.2em] text-white uppercase">REET TV CHANNEL</h2>
-        <p className="text-slate-400 mt-2 text-xs font-bold uppercase tracking-widest">Premium Stream Library</p>
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-950 px-4">
+        <Loader2 className="w-8 h-8 sm:w-12 sm:h-12 text-blue-500 animate-spin mb-4 sm:mb-6" />
+        <h2 className="text-lg sm:text-xl lg:text-2xl font-black tracking-[0.2em] text-white uppercase text-center">REET TV CHANNEL</h2>
+        <p className="text-slate-400 mt-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-center">Premium Stream Library</p>
       </div>
     );
   }
 
-  if (error) {
+if (error) {
     return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-950 p-8 text-center">
-        <div className="w-20 h-20 bg-red-500/10 rounded-3xl flex items-center justify-center mb-8">
-          <AlertCircle className="w-10 h-10 text-red-500" />
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-950 p-4 sm:p-8 text-center">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-red-500/10 rounded-3xl flex items-center justify-center mb-6 sm:mb-8">
+          <AlertCircle className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-red-500" />
         </div>
-        <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">System Offline</h2>
-        <p className="text-slate-500 mb-10 max-w-xs text-xs font-bold uppercase tracking-widest leading-loose">{error}</p>
+        <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-white uppercase tracking-tighter mb-2">System Offline</h2>
+        <p className="text-slate-500 mb-8 sm:mb-10 max-w-sm text-[10px] sm:text-xs font-bold uppercase tracking-widest leading-loose">{error}</p>
         <button
           onClick={() => window.location.reload()}
-          className="px-10 py-4 bg-white text-slate-950 rounded-2xl transition font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl active:scale-95"
+          className="px-6 sm:px-8 lg:px-10 py-3 sm:py-4 bg-white text-slate-950 rounded-2xl transition font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl active:scale-95 touch-target"
         >
           Retry Access
         </button>
@@ -98,8 +365,8 @@ const App: React.FC = () => {
     );
   }
 
-  return (
-    <div className="h-screen w-full overflow-hidden bg-slate-950 text-slate-100 selection:bg-blue-500/30">
+return (
+    <div className={`h-screen w-full overflow-hidden text-slate-100 selection:bg-blue-500/30 ${preferences.theme === 'light' ? 'bg-white text-slate-900' : 'bg-slate-950'}`}>
       {viewMode === 'gallery' ? (
         <ChannelGallery
           channels={channels}
@@ -107,15 +374,36 @@ const App: React.FC = () => {
           onSelect={handleSelectChannel}
           onToggleFavorite={toggleFavorite}
         />
-      ) : (
+      ) : viewMode === 'player' ? (
         <div className="h-full w-full flex flex-col relative bg-black">
-          <button
-            onClick={() => setViewMode('gallery')}
-            className="absolute top-6 left-6 z-[100] flex items-center gap-2 pr-5 pl-3 py-3 bg-black/40 hover:bg-black/60 backdrop-blur-2xl rounded-2xl border border-white/10 transition-all active:scale-90 group shadow-2xl"
-          >
-            <ChevronLeft size={20} className="text-white group-hover:-translate-x-1 transition-transform" strokeWidth={3} />
-            <span className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Exit Player</span>
-          </button>
+          {/* Enhanced Header with Settings */}
+          <div className="absolute top-4 sm:top-6 lg:top-8 left-4 sm:left-6 lg:left-8 z-[100] flex items-center gap-3">
+            <button
+              onClick={() => setViewMode('gallery')}
+              className="flex items-center gap-2 pr-3 sm:pr-5 pl-2 sm:pl-3 py-2 sm:py-3 bg-black/40 hover:bg-black/60 backdrop-blur-2xl rounded-xl sm:rounded-2xl border border-white/10 transition-all active:scale-90 group shadow-2xl touch-target"
+            >
+              <ChevronLeft size={16} className="text-white group-hover:-translate-x-1 transition-transform" strokeWidth={3} />
+              <span className="text-[9px] sm:text-[10px] font-black text-white uppercase tracking-[0.2em]">Exit</span>
+            </button>
+
+            <button
+              onClick={() => setShowSettings(true)}
+              className="p-2 sm:p-3 bg-black/40 hover:bg-black/60 backdrop-blur-2xl rounded-xl sm:rounded-2xl border border-white/10 transition-all active:scale-90 shadow-2xl touch-target"
+              title="Settings"
+            >
+              <Settings size={16} className="text-white" strokeWidth={3} />
+            </button>
+
+            {preferences.keyboardShortcuts && (
+              <button
+                onClick={() => setShowKeyboardShortcuts(true)}
+                className="p-2 sm:p-3 bg-black/40 hover:bg-black/60 backdrop-blur-2xl rounded-xl sm:rounded-2xl border border-white/10 transition-all active:scale-90 shadow-2xl touch-target"
+                title="Keyboard Shortcuts (Press ?)"
+              >
+                <Keyboard size={16} className="text-white" strokeWidth={3} />
+              </button>
+            )}
+          </div>
 
           <VideoPlayer
             channel={currentChannel}
@@ -123,9 +411,35 @@ const App: React.FC = () => {
             onToggleFavorite={currentChannel ? () => toggleFavorite(currentChannel.id) : () => { }}
             onNext={handleNext}
             onPrevious={handlePrevious}
+            onMinimize={handleMinimizePlayer}
           />
         </div>
-      )}
+      ) : null}
+
+      {/* Mini Player */}
+      <MiniPlayer
+        channel={currentChannel}
+        isVisible={viewMode === 'mini'}
+        onClose={handleCloseMiniPlayer}
+        onMaximize={handleMaximizePlayer}
+        position={miniPlayerPosition}
+        onPositionChange={setMiniPlayerPosition}
+      />
+
+      {/* Settings Panel */}
+      <SettingsPanel
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        preferences={preferences}
+        onPreferencesChange={handlePreferencesChange}
+      />
+
+      {/* Keyboard Shortcuts Panel */}
+      <KeyboardShortcuts
+        isOpen={showKeyboardShortcuts}
+        onClose={() => setShowKeyboardShortcuts(false)}
+        shortcuts={keyboardService.getShortcuts()}
+      />
     </div>
   );
 };

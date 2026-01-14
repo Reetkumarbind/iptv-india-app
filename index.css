@@ -1,0 +1,253 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Light theme overrides */
+.light {
+  --tw-bg-slate-950: #ffffff;
+  --tw-bg-slate-900: #f8fafc;
+  --tw-bg-slate-800: #f1f5f9;
+  --tw-text-slate-100: #0f172a;
+  --tw-text-slate-400: #64748b;
+  --tw-text-slate-500: #64748b;
+  --tw-border-white: #e2e8f0;
+}
+
+.light .bg-slate-950 {
+  background-color: #ffffff !important;
+}
+
+.light .bg-slate-900 {
+  background-color: #f8fafc !important;
+}
+
+.light .bg-slate-800 {
+  background-color: #f1f5f9 !important;
+}
+
+.light .text-slate-100 {
+  color: #0f172a !important;
+}
+
+.light .text-slate-400 {
+  color: #64748b !important;
+}
+
+.light .text-slate-500 {
+  color: #64748b !important;
+}
+
+.light .border-white\/10 {
+  border-color: rgba(226, 232, 240, 0.3) !important;
+}
+
+.light .border-white\/5 {
+  border-color: rgba(226, 232, 240, 0.2) !important;
+}
+
+/* Scrollbar styling */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Touch target for better mobile interaction */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Custom animations */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-in-from-top-4 {
+  from { 
+    opacity: 0; 
+    transform: translateY(-1rem);
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0);
+  }
+}
+
+@keyframes zoom-in-95 {
+  from { 
+    opacity: 0; 
+    transform: scale(0.95);
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+}
+
+.animate-in {
+  animation-fill-mode: both;
+}
+
+.fade-in {
+  animation: fade-in 0.5s ease-out;
+}
+
+.slide-in-from-top-4 {
+  animation: slide-in-from-top-4 0.5s ease-out;
+}
+
+.zoom-in-95 {
+  animation: zoom-in-95 0.2s ease-out;
+}
+
+/* Video player enhancements */
+video::-webkit-media-controls {
+  display: none !important;
+}
+
+video::-webkit-media-controls-enclosure {
+  display: none !important;
+}
+
+/* Custom range input styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-track {
+  background: rgba(255, 255, 255, 0.2);
+  height: 4px;
+  border-radius: 2px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  background: #3b82f6;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-track {
+  background: rgba(255, 255, 255, 0.2);
+  height: 4px;
+  border-radius: 2px;
+  border: none;
+}
+
+input[type="range"]::-moz-range-thumb {
+  background: #3b82f6;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+/* Responsive breakpoints for custom classes */
+@media (max-width: 480px) {
+  .xs\:hidden {
+    display: none;
+  }
+  
+  .xs\:inline {
+    display: inline;
+  }
+}
+
+/* Fullscreen message animations */
+@keyframes fade-out {
+  from { 
+    opacity: 1; 
+    transform: translateY(0);
+  }
+  to { 
+    opacity: 0; 
+    transform: translateY(-1rem);
+  }
+}
+
+.fade-out {
+  animation: fade-out 0.5s ease-out forwards;
+}
+
+/* Fullscreen enhancements */
+:fullscreen {
+  background-color: #000000;
+}
+
+:-webkit-full-screen {
+  background-color: #000000;
+}
+
+:-moz-full-screen {
+  background-color: #000000;
+}
+
+:-ms-fullscreen {
+  background-color: #000000;
+}
+
+/* Hide cursor in fullscreen after inactivity */
+:fullscreen .cursor-none {
+  cursor: none !important;
+}
+
+/* Fullscreen video container */
+:fullscreen video {
+  width: 100vw !important;
+  height: 100vh !important;
+  object-fit: contain;
+}
+
+/* Performance optimizations */
+* {
+  box-sizing: border-box;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus styles for keyboard navigation */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .bg-slate-950 {
+    background-color: #000000 !important;
+  }
+  
+  .text-slate-100 {
+    color: #ffffff !important;
+  }
+  
+  .border-white\/10 {
+    border-color: rgba(255, 255, 255, 0.5) !important;
+  }
+}
