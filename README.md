@@ -2,7 +2,7 @@
 
 A powerful, feature-rich web-based IPTV player with advanced streaming capabilities, built with React, TypeScript, and modern web technologies.
 
-**Live Demo:** [https://iptv-india-app.netlify.app](https://iptv-india-app.netlify.app)
+**Live Demo:** [https://iptv-india-app.netlify.app](https://reettvchannel.netlify.app)
 
 ## ✨ Features
 
