@@ -11,7 +11,7 @@ import SettingsPanel from './components/SettingsPanel';
 import KeyboardShortcuts from './components/KeyboardShortcuts';
 import MiniPlayer from './components/MiniPlayer';
 import SecurityIndicator from './components/SecurityIndicator';
-import { Loader2, AlertCircle, ChevronLeft, Settings, Keyboard } from 'lucide-react';
+import { Loader2, AlertCircle, ChevronLeft, Settings, Keyboard, Tv } from 'lucide-react';
 
 const M3U_URL = 'https://iptv-org.github.io/iptv/countries/in.m3u';
 
@@ -24,7 +24,7 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('gallery');
-  
+
   // Enhanced features state
   const [preferences, setPreferences] = useState<UserPreferences>(StorageService.getUserPreferences());
   const [showSettings, setShowSettings] = useState(false);
@@ -49,29 +49,29 @@ const App: React.FC = () => {
       try {
         setIsLoading(true);
         console.log('🚀 Initializing app...');
-        
+
         // Skip security validation for normal mode
         console.log('🔍 Loading M3U URL:', M3U_URL);
-        
+
         // Load favorites using StorageService
         console.log('📂 Loading favorites...');
         const savedFavorites = StorageService.getFavorites();
         setFavorites(new Set(savedFavorites));
         console.log('✅ Favorites loaded:', savedFavorites.length);
-        
+
         console.log('📡 Fetching M3U playlist...');
         const data = await fetchAndParseM3U(M3U_URL);
         console.log('✅ M3U data received:', data.length, 'channels');
-        
+
         // Basic validation without security service
         console.log('🔒 Basic channel validation...');
-        const validChannels = data.filter(channel => 
-          channel.url && 
-          channel.name && 
+        const validChannels = data.filter(channel =>
+          channel.url &&
+          channel.name &&
           channel.id
         );
         console.log('✅ Channels validated:', validChannels.length, 'valid channels');
-        
+
         setChannels(validChannels);
         console.log('🎉 App initialization complete!');
       } catch (err) {
@@ -236,7 +236,7 @@ const App: React.FC = () => {
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
-    
+
     return () => {
       handleBeforeUnload(); // Save on component unmount
       keyboardService.destroy();
@@ -252,7 +252,7 @@ const App: React.FC = () => {
   // Handle preferences changes
   const handlePreferencesChange = (newPreferences: UserPreferences) => {
     setPreferences(newPreferences);
-    
+
     // Apply theme
     if (newPreferences.theme === 'light') {
       document.documentElement.classList.add('light');
@@ -337,17 +337,45 @@ const App: React.FC = () => {
     currentIndex >= 0 ? channels[currentIndex] : null
     , [channels, currentIndex]);
 
-if (isLoading) {
+  const nextChannelName = useMemo(() => {
+    if (channels.length === 0 || currentIndex < 0) return null;
+    const nextIndex = (currentIndex + 1) % channels.length;
+    return channels[nextIndex].name;
+  }, [channels, currentIndex]);
+
+  if (isLoading) {
     return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-950 px-4">
-        <Loader2 className="w-8 h-8 sm:w-12 sm:h-12 text-blue-500 animate-spin mb-4 sm:mb-6" />
-        <h2 className="text-lg sm:text-xl lg:text-2xl font-black tracking-[0.2em] text-white uppercase text-center">REET TV CHANNEL</h2>
-        <p className="text-slate-400 mt-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-center">Premium Stream Library</p>
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-[#020617] relative overflow-hidden">
+        {/* Animated Background Elements */}
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-600/10 blur-[100px] animate-pulse rounded-full" />
+        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-600/10 blur-[100px] animate-pulse rounded-full" />
+
+        <div className="relative flex flex-col items-center gap-8">
+          <div className="relative">
+            <Loader2 className="w-16 h-16 text-blue-500 animate-[spin_2s_linear_infinite]" strokeWidth={1} />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Tv className="w-6 h-6 text-white animate-pulse" />
+            </div>
+          </div>
+
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl sm:text-3xl font-black tracking-[0.4em] text-white uppercase translate-y-2 opacity-0 animate-in fade-in slide-in-from-bottom-2 duration-700 fill-mode-forwards">
+              REET TV CHANNEL
+            </h2>
+            <div className="flex items-center justify-center gap-3">
+              <div className="h-[1px] w-8 bg-blue-500/50" />
+              <p className="text-slate-500 text-[10px] sm:text-xs font-black uppercase tracking-[0.3em]">
+                Premium Stream Library
+              </p>
+              <div className="h-[1px] w-8 bg-blue-500/50" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
-if (error) {
+  if (error) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-950 p-4 sm:p-8 text-center">
         <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-red-500/10 rounded-3xl flex items-center justify-center mb-6 sm:mb-8">
@@ -365,7 +393,7 @@ if (error) {
     );
   }
 
-return (
+  return (
     <div className={`h-screen w-full overflow-hidden text-slate-100 selection:bg-blue-500/30 ${preferences.theme === 'light' ? 'bg-white text-slate-900' : 'bg-slate-950'}`}>
       {viewMode === 'gallery' ? (
         <ChannelGallery
@@ -376,42 +404,16 @@ return (
         />
       ) : viewMode === 'player' ? (
         <div className="h-full w-full flex flex-col relative bg-black">
-          {/* Enhanced Header with Settings */}
-          <div className="absolute top-4 sm:top-6 lg:top-8 left-4 sm:left-6 lg:left-8 z-[100] flex items-center gap-3">
-            <button
-              onClick={() => setViewMode('gallery')}
-              className="flex items-center gap-2 pr-3 sm:pr-5 pl-2 sm:pl-3 py-2 sm:py-3 bg-black/40 hover:bg-black/60 backdrop-blur-2xl rounded-xl sm:rounded-2xl border border-white/10 transition-all active:scale-90 group shadow-2xl touch-target"
-            >
-              <ChevronLeft size={16} className="text-white group-hover:-translate-x-1 transition-transform" strokeWidth={3} />
-              <span className="text-[9px] sm:text-[10px] font-black text-white uppercase tracking-[0.2em]">Exit</span>
-            </button>
-
-            <button
-              onClick={() => setShowSettings(true)}
-              className="p-2 sm:p-3 bg-black/40 hover:bg-black/60 backdrop-blur-2xl rounded-xl sm:rounded-2xl border border-white/10 transition-all active:scale-90 shadow-2xl touch-target"
-              title="Settings"
-            >
-              <Settings size={16} className="text-white" strokeWidth={3} />
-            </button>
-
-            {preferences.keyboardShortcuts && (
-              <button
-                onClick={() => setShowKeyboardShortcuts(true)}
-                className="p-2 sm:p-3 bg-black/40 hover:bg-black/60 backdrop-blur-2xl rounded-xl sm:rounded-2xl border border-white/10 transition-all active:scale-90 shadow-2xl touch-target"
-                title="Keyboard Shortcuts (Press ?)"
-              >
-                <Keyboard size={16} className="text-white" strokeWidth={3} />
-              </button>
-            )}
-          </div>
-
           <VideoPlayer
             channel={currentChannel}
+            nextChannelName={nextChannelName || undefined}
             isFavorite={currentChannel ? favorites.has(currentChannel.id) : false}
             onToggleFavorite={currentChannel ? () => toggleFavorite(currentChannel.id) : () => { }}
             onNext={handleNext}
             onPrevious={handlePrevious}
             onMinimize={handleMinimizePlayer}
+            onExit={() => setViewMode('gallery')}
+            onShowKeyboard={() => setShowKeyboardShortcuts(true)}
           />
         </div>
       ) : null}

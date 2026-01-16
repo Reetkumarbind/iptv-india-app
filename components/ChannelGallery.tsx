@@ -65,7 +65,7 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
   const [trendingChannels, setTrendingChannels] = useState<string[]>([]);
   const [isVoiceSupported, setIsVoiceSupported] = useState(false);
 
-// Pagination State - Responsive based on screen size
+  // Pagination State - Responsive based on screen size
   const getInitialCount = () => {
     const width = window.innerWidth;
     if (width < 640) return 6;      // Mobile
@@ -83,20 +83,20 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
   useEffect(() => {
     const recent = StorageService.getRecentlyWatched(10);
     setRecentChannels(recent);
-    
+
     // Calculate trending based on recent watch frequency
     const channelCounts = recent.reduce((acc: any, item) => {
       acc[item.channelId] = (acc[item.channelId] || 0) + 1;
       return acc;
     }, {});
-    
+
     const trending = Object.entries(channelCounts)
-      .sort(([,a]: any, [,b]: any) => b - a)
+      .sort(([, a]: any, [, b]: any) => b - a)
       .slice(0, 20)
       .map(([channelId]) => channelId);
-    
+
     setTrendingChannels(trending);
-    
+
     // Check voice search support
     const voiceService = new VoiceSearchService();
     setIsVoiceSupported(voiceService.isVoiceSearchSupported());
@@ -161,18 +161,18 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
       .map((channel: any, index: number) => ({ ...channel, originalIndex: index }))
       .filter((channel: any) => {
         const matchesSearch = channel.name.toLowerCase().includes(searchTerm.toLowerCase());
-        
+
         let matchesGroup = true;
         if (selectedGroup !== 'All') {
           const mapped = CATEGORY_CONFIG[channel.group]?.name || channel.group || 'Other';
           matchesGroup = mapped === selectedGroup;
         }
-        
+
         let matchesLanguage = true;
         if (selectedLanguage !== 'All') {
           matchesLanguage = channel.language === selectedLanguage;
         }
-        
+
         let matchesView = true;
         if (viewMode === 'favorites') {
           matchesView = favorites.has(channel.id);
@@ -181,7 +181,7 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
         } else if (viewMode === 'trending') {
           matchesView = trendingChannels.includes(channel.id);
         }
-        
+
         return matchesSearch && matchesGroup && matchesLanguage && matchesView;
       });
 
@@ -217,7 +217,7 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
     return filteredChannels.slice(0, visibleCount);
   }, [filteredChannels, visibleCount]);
 
-const handleLoadMore = () => {
+  const handleLoadMore = () => {
     const width = window.innerWidth;
     const increment = width < 640 ? 12 : (width < 1024 ? 18 : 24);
     setVisibleCount(prev => prev + increment);
@@ -267,7 +267,7 @@ const handleLoadMore = () => {
     <div ref={scrollContainerRef} className="h-full w-full flex flex-col bg-slate-950 overflow-y-auto scroll-smooth">
       <ScrollToTop containerRef={scrollContainerRef} />
 
-{/* Hero Branding - Responsive Top Zero Center */}
+      {/* Hero Branding - Responsive Top Zero Center */}
       <div className="relative pt-3 sm:pt-4 lg:pt-6 pb-1 px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center flex-shrink-0">
         <div className="absolute inset-0 bg-gradient-to-b from-blue-600/5 to-transparent pointer-events-none" />
         <div className="flex items-center gap-2 sm:gap-3 mb-1">
@@ -277,9 +277,9 @@ const handleLoadMore = () => {
           <h1 className="text-sm sm:text-xl lg:text-2xl xl:text-3xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-slate-400 uppercase leading-none">
             REET TV CHANNEL
           </h1>
-          <img 
-            src="/profile.png" 
-            alt="Reet Kumar Bind" 
+          <img
+            src="/profile.png"
+            alt="Reet Kumar Bind"
             className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 rounded-full border border-blue-600/30 shadow-lg"
           />
         </div>
@@ -288,7 +288,7 @@ const handleLoadMore = () => {
         </p>
       </div>
 
-{/* Responsive Sticky Controls */}
+      {/* Responsive Sticky Controls */}
       <div className="sticky top-0 z-50 px-3 sm:px-4 lg:px-8 py-2 bg-slate-950/80 backdrop-blur-2xl border-b border-white/5">
         <div className="w-full max-w-6xl mx-auto space-y-3 sm:space-y-4">
 
@@ -337,7 +337,7 @@ const handleLoadMore = () => {
                 className="w-full bg-slate-900/50 border border-white/10 rounded-xl sm:rounded-2xl py-2.5 sm:py-3.5 pl-9 sm:pl-11 pr-16 sm:pr-20 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all text-slate-100 placeholder:text-slate-500"
               />
               <div className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                <VoiceSearch 
+                <VoiceSearch
                   onSearchResult={handleVoiceSearchResult}
                   isSupported={isVoiceSupported}
                 />
@@ -432,10 +432,10 @@ const handleLoadMore = () => {
                 className={`flex-shrink-0 flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3.5 rounded-lg sm:rounded-xl transition-all duration-300 font-black text-[10px] sm:text-xs uppercase tracking-wider touch-target ${sortOrder !== 'none' ? 'bg-blue-600 text-white shadow-lg' : 'bg-slate-900/50 border border-white/10 text-slate-400 hover:text-slate-100'
                   }`}
               >
-                {sortOrder.includes('group') ? <Tags size={12} /> : 
-                 sortOrder === 'trending' ? <TrendingUp size={12} /> :
-                 sortOrder === 'recent' ? <Clock size={12} /> :
-                 <SortAsc size={12} />}
+                {sortOrder.includes('group') ? <Tags size={12} /> :
+                  sortOrder === 'trending' ? <TrendingUp size={12} /> :
+                    sortOrder === 'recent' ? <Clock size={12} /> :
+                      <SortAsc size={12} />}
                 <span className="hidden sm:inline">{getSortLabel()}</span>
                 <span className="sm:hidden">{sortOrder === 'none' ? 'Sort' : getSortLabel().substring(0, 3)}</span>
               </button>
@@ -444,10 +444,70 @@ const handleLoadMore = () => {
         </div>
       </div>
 
-{/* Recently Watched Section */}
+      {/* Featured Channels Section */}
+      {viewMode === 'all' && !searchTerm && selectedGroup === 'All' && selectedLanguage === 'All' && (
+        <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full mb-8 sm:mb-12">
+          <div className="relative group overflow-hidden rounded-[2rem] sm:rounded-[3rem] bg-gradient-to-br from-blue-600/20 via-slate-900 to-slate-950 border border-white/10 aspect-[21/9] sm:aspect-[21/7] lg:aspect-[21/5] flex items-center p-6 sm:p-10 lg:p-16">
+            <div className="absolute inset-0 bg-[#000814]/40 backdrop-blur-[2px]" />
+            <div className="absolute top-0 right-0 w-1/2 h-full opacity-20 sm:opacity-40">
+              <div className="w-full h-full bg-blue-600 blur-[120px] rounded-full translate-x-1/2 -translate-y-1/2" />
+            </div>
+
+            <div className="relative z-10 flex flex-col items-start max-w-2xl">
+              <div className="flex items-center gap-2 px-3 py-1 bg-blue-600 rounded-full mb-4 sm:mb-6 animate-pulse">
+                <Sparkles size={12} className="text-white" />
+                <span className="text-[9px] sm:text-[10px] font-black text-white uppercase tracking-[0.2em]">Live Spotlight</span>
+              </div>
+
+              <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white uppercase tracking-tighter mb-4 leading-[0.9]">
+                Experience <span className="text-blue-500">Premium</span><br />
+                Indian Television
+              </h2>
+
+              <p className="text-slate-400 text-xs sm:text-sm font-medium mb-6 sm:mb-8 max-w-md uppercase tracking-wider leading-relaxed">
+                Stream over {channels.length} high-quality channels directly on your device. Zero lag, crystal clear.
+              </p>
+
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => onSelect(Math.floor(Math.random() * channels.length))}
+                  className="px-6 sm:px-8 py-3 sm:py-4 bg-white text-slate-950 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl hover:scale-105 transition active:scale-95"
+                >
+                  Watch Now
+                </button>
+                <div className="flex -space-x-3">
+                  {channels.slice(0, 5).map((c, i) => (
+                    <div key={i} className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-slate-950 bg-slate-900 flex items-center justify-center overflow-hidden">
+                      {c.logo ? <img src={c.logo} className="w-full h-full object-contain p-1" alt="" /> : <Tv size={12} className="text-slate-500" />}
+                    </div>
+                  ))}
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-slate-950 bg-blue-600 flex items-center justify-center text-[8px] sm:text-[10px] font-bold text-white">
+                    +{channels.length - 5}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Floating Element */}
+            <div className="hidden lg:block absolute right-16 top-1/2 -translate-y-1/2 w-64 h-64 bg-slate-800/20 backdrop-blur-2xl rounded-[3rem] border border-white/5 rotate-12 transition-transform group-hover:rotate-6 duration-700">
+              <div className="w-full h-full flex flex-col items-center justify-center p-8 gap-4 -rotate-12 group-hover:-rotate-6 transition-transform duration-700">
+                <div className="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-600/40">
+                  <Zap size={32} fill="white" className="text-white" />
+                </div>
+                <div className="text-center">
+                  <div className="text-xl font-black text-white">4K ULTRA</div>
+                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Adaptive Streaming</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Recently Watched Section */}
       {viewMode === 'all' && recentChannels.length > 0 && (
         <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
-          <RecentlyWatched 
+          <RecentlyWatched
             recentChannels={recentChannels}
             channels={channels}
             onSelectChannel={handleSelectRecentChannel}
@@ -455,18 +515,18 @@ const handleLoadMore = () => {
         </div>
       )}
 
-{/* Main Content Area - Enhanced */}
+      {/* Main Content Area - Enhanced */}
       <div className="px-4 sm:px-6 lg:px-8 pb-20 sm:pb-24 max-w-7xl mx-auto w-full mt-2">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 border-b border-white/5 pb-4">
           <div className="flex flex-col">
             <h2 className="text-base sm:text-lg lg:text-2xl font-black text-white uppercase tracking-tighter flex items-center gap-2 sm:gap-3">
-              {viewMode === 'favorites' ? <Heart className="text-red-600" fill="currentColor" size={16} /> : 
-               viewMode === 'recent' ? <Clock className="text-green-600" size={16} /> :
-               viewMode === 'trending' ? <TrendingUp className="text-purple-600" size={16} /> :
-               <LayoutGrid className="text-blue-500" size={16} />}
-              {viewMode === 'favorites' ? 'Saved' : 
-               viewMode === 'recent' ? 'Recent' :
-               viewMode === 'trending' ? 'Trending' : 'Library'}
+              {viewMode === 'favorites' ? <Heart className="text-red-600" fill="currentColor" size={16} /> :
+                viewMode === 'recent' ? <Clock className="text-green-600" size={16} /> :
+                  viewMode === 'trending' ? <TrendingUp className="text-purple-600" size={16} /> :
+                    <LayoutGrid className="text-blue-500" size={16} />}
+              {viewMode === 'favorites' ? 'Saved' :
+                viewMode === 'recent' ? 'Recent' :
+                  viewMode === 'trending' ? 'Trending' : 'Library'}
             </h2>
             <p className="text-[9px] sm:text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">
               {visibleCount < filteredChannels.length ? visibleCount : filteredChannels.length} of {filteredChannels.length}
@@ -528,18 +588,18 @@ const handleLoadMore = () => {
             </div>
 
             <h3 className="text-lg sm:text-2xl font-black text-white uppercase tracking-tight mb-2 sm:mb-3">
-              {viewMode === 'favorites' ? 'No favorites' : 
-               viewMode === 'recent' ? 'No recent channels' :
-               viewMode === 'trending' ? 'No trending channels' : 'No results'}
+              {viewMode === 'favorites' ? 'No favorites' :
+                viewMode === 'recent' ? 'No recent channels' :
+                  viewMode === 'trending' ? 'No trending channels' : 'No results'}
             </h3>
             <p className="max-w-xs mx-auto text-slate-500 text-xs sm:text-sm font-medium mb-6 sm:mb-10 leading-relaxed">
               {viewMode === 'favorites'
                 ? "Browse channels and save favorites."
                 : viewMode === 'recent'
-                ? "Start watching channels to see them here."
-                : viewMode === 'trending'
-                ? "Popular channels will appear here."
-                : "Try different search terms."}
+                  ? "Start watching channels to see them here."
+                  : viewMode === 'trending'
+                    ? "Popular channels will appear here."
+                    : "Try different search terms."}
             </p>
 
             <button

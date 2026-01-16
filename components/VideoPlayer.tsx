@@ -3,52 +3,56 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Hls from 'hls.js';
 import { IPTVChannel, StreamHealth } from '../types';
 import { StorageService } from '../services/storageService';
-import { 
-  Play, 
-  Pause, 
-  Volume2, 
-  VolumeX, 
-  Maximize, 
-  SkipBack, 
-  SkipForward, 
-  Loader2, 
-  Star, 
-  Tv, 
+import { EPGService, EPGProgram } from '../services/epgService';
+import {
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  Maximize,
+  SkipBack,
+  SkipForward,
+  Loader2,
+  Star,
+  Tv,
   PictureInPicture2,
   Settings,
   Minimize2,
-  RotateCcw,
   Gauge,
-  Headphones,
   Monitor,
-  MessageSquare
+  ChevronLeft,
+  Keyboard as KeyboardIcon
 } from 'lucide-react';
 
 interface VideoPlayerProps {
   channel: IPTVChannel | null;
+  nextChannelName?: string;
   isFavorite: boolean;
   onToggleFavorite: () => void;
   onNext: () => void;
   onPrevious: () => void;
   onMinimize?: () => void;
+  onExit: () => void;
+  onShowKeyboard?: () => void;
 }
 
 const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
-const QUALITY_OPTIONS = ['auto', '1080p', '720p', '480p', '360p'];
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ 
-  channel, 
-  isFavorite, 
-  onToggleFavorite, 
-  onNext, 
+const VideoPlayer: React.FC<VideoPlayerProps> = ({
+  channel,
+  nextChannelName,
+  isFavorite,
+  onToggleFavorite,
+  onNext,
   onPrevious,
-  onMinimize 
+  onMinimize,
+  onExit,
+  onShowKeyboard
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const watchStartTime = useRef<number>(0);
-  
-  // Basic player state
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(1);
@@ -56,81 +60,51 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [showControls, setShowControls] = useState(true);
   const [isPiPSupported, setIsPiPSupported] = useState(false);
-  
-  // Enhanced features state
+
   const [playbackRate, setPlaybackRate] = useState(1);
   const [selectedQuality, setSelectedQuality] = useState('auto');
   const [availableQualities, setAvailableQualities] = useState<string[]>(['auto']);
-  const [audioTracks, setAudioTracks] = useState<any[]>([]);
-  const [selectedAudioTrack, setSelectedAudioTrack] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
   const [streamHealth, setStreamHealth] = useState<StreamHealth | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [bandwidthUsage, setBandwidthUsage] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showFullscreenMessage, setShowFullscreenMessage] = useState(false);
-  const fullscreenMessageTimerRef = useRef<number | null>(null);
-  
+
   const controlsTimerRef = useRef<number | null>(null);
+  const [currentProgram, setCurrentProgram] = useState<EPGProgram | null>(null);
+  const [nextProgram, setNextProgram] = useState<EPGProgram | null>(null);
 
   useEffect(() => {
     setIsPiPSupported(
-      typeof document !== 'undefined' && 
-      'pictureInPictureEnabled' in document && 
+      typeof document !== 'undefined' &&
+      'pictureInPictureEnabled' in document &&
       (document as any).pictureInPictureEnabled
     );
 
-    // Listen for fullscreen changes
-    const handleFullscreenChange = () => {
-      const isNowFullscreen = !!document.fullscreenElement;
-      setIsFullscreen(isNowFullscreen);
-      
-      if (isNowFullscreen) {
-        // Show fullscreen message when entering fullscreen
-        setShowFullscreenMessage(true);
-        
-        // Clear any existing timer
-        if (fullscreenMessageTimerRef.current) {
-          window.clearTimeout(fullscreenMessageTimerRef.current);
-        }
-        
-        // Hide message after 5 seconds
-        fullscreenMessageTimerRef.current = window.setTimeout(() => {
-          setShowFullscreenMessage(false);
-        }, 5000);
-      } else {
-        // Hide message immediately when exiting fullscreen
-        setShowFullscreenMessage(false);
-        if (fullscreenMessageTimerRef.current) {
-          window.clearTimeout(fullscreenMessageTimerRef.current);
-        }
-      }
-    };
-
+    const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
-    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
-
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
-      
-      // Clear fullscreen message timer
-      if (fullscreenMessageTimerRef.current) {
-        window.clearTimeout(fullscreenMessageTimerRef.current);
-      }
-    };
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  // Track watch time for analytics - Enhanced to always save
+  useEffect(() => {
+    if (!channel) return;
+    const updatePrograms = () => {
+      setCurrentProgram(EPGService.getProgramForChannel(channel));
+      setNextProgram(EPGService.getNextProgramForChannel(channel));
+    };
+    updatePrograms();
+    const interval = setInterval(updatePrograms, 60000);
+    return () => clearInterval(interval);
+  }, [channel]);
+
+  const progress = currentProgram
+    ? ((Date.now() - currentProgram.start) / (currentProgram.end - currentProgram.start)) * 100
+    : 0;
+
   const trackWatchTime = useCallback(() => {
     if (!channel || !watchStartTime.current) return;
-    
     const watchDuration = Math.floor((Date.now() - watchStartTime.current) / 1000);
-    if (watchDuration > 2) { // Reduced threshold to 2 seconds for better tracking
+    if (watchDuration > 2) {
       StorageService.addToWatchHistory({
         channelId: channel.id,
         channelName: channel.name,
@@ -138,79 +112,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         duration: watchDuration,
         logo: channel.logo || undefined
       });
-      console.log(`Tracked watch time: ${watchDuration}s for ${channel.name}`); // Debug log
     }
   }, [channel]);
 
-  // Auto-save watch time periodically
-  useEffect(() => {
-    if (!channel || !isPlaying) return;
-
-    const interval = setInterval(() => {
-      trackWatchTime();
-      // Reset start time for next interval
-      watchStartTime.current = Date.now();
-    }, 30000); // Save every 30 seconds while playing
-
-    return () => clearInterval(interval);
-  }, [channel, isPlaying, trackWatchTime]);
-
-  // Monitor stream health
   const updateStreamHealth = useCallback((status: 'healthy' | 'slow' | 'failed', latency: number = 0) => {
     if (!channel) return;
-    
-    const health: StreamHealth = {
-      channelId: channel.id,
-      status,
-      latency,
-      lastChecked: Date.now()
-    };
-    
+    const health: StreamHealth = { channelId: channel.id, status, latency, lastChecked: Date.now() };
     setStreamHealth(health);
     StorageService.updateStreamHealth(health);
   }, [channel]);
-
-  // Auto-retry failed streams
-  const retryStream = useCallback(() => {
-    if (!channel || retryCount >= 3) return;
-    
-    setRetryCount(prev => prev + 1);
-    setError(null);
-    setIsLoading(true);
-    
-    // Retry after delay
-    setTimeout(() => {
-      if (videoRef.current && channel) {
-        const video = videoRef.current;
-        
-        if (hlsRef.current) {
-          hlsRef.current.destroy();
-        }
-        
-        if (Hls.isSupported()) {
-          const hls = new Hls({ enableWorker: true, lowLatencyMode: true });
-          hlsRef.current = hls;
-          hls.loadSource(channel.url);
-          hls.attachMedia(video);
-          
-          hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            video.play().catch(() => setIsPlaying(false));
-            setIsLoading(false);
-            updateStreamHealth('healthy');
-            setRetryCount(0);
-          });
-          
-          hls.on(Hls.Events.ERROR, (event, data) => {
-            if (data.fatal) {
-              updateStreamHealth('failed');
-              setError('Stream unavailable. Retrying...');
-              setTimeout(retryStream, 2000);
-            }
-          });
-        }
-      }
-    }, 1000 * retryCount);
-  }, [channel, retryCount, updateStreamHealth]);
 
   const resetControlsTimer = () => {
     setShowControls(true);
@@ -218,110 +128,146 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     controlsTimerRef.current = window.setTimeout(() => {
       if (isPlaying) setShowControls(false);
     }, 4000);
-    
-    // Also show fullscreen message briefly if in fullscreen mode
-    if (isFullscreen && !showFullscreenMessage) {
-      setShowFullscreenMessage(true);
-      if (fullscreenMessageTimerRef.current) {
-        window.clearTimeout(fullscreenMessageTimerRef.current);
-      }
-      fullscreenMessageTimerRef.current = window.setTimeout(() => {
-        setShowFullscreenMessage(false);
-      }, 3000); // Show for 3 seconds on mouse movement
-    }
   };
-
-  useEffect(() => {
-    resetControlsTimer();
-    return () => {
-      if (controlsTimerRef.current) window.clearTimeout(controlsTimerRef.current);
-    };
-  }, [isPlaying]);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !channel) return;
 
-    // Track watch start time
     watchStartTime.current = Date.now();
-    
     let hls: Hls | null = null;
+    let loadTimeout: number | null = null;
     setIsLoading(true);
     setError(null);
-    setRetryCount(0);
+
+    // Set a timeout for loading (20 seconds)
+    loadTimeout = window.setTimeout(() => {
+      if (isLoading) {
+        console.error('Stream loading timeout for:', channel.name);
+        updateStreamHealth('failed');
+        setIsLoading(false);
+        if (hls) {
+          hls.destroy();
+        }
+        // Auto skip to next channel
+        onNext();
+      }
+    }, 20000);
 
     if (Hls.isSupported()) {
-      hls = new Hls({ enableWorker: true, lowLatencyMode: true });
+      hls = new Hls({ 
+        enableWorker: true, 
+        lowLatencyMode: false,
+        maxLoadingDelay: 8,
+        maxBufferLength: 30,
+        maxMaxBufferLength: 60,
+        manifestLoadingTimeOut: 15000,
+        manifestLoadingMaxRetry: 3,
+        levelLoadingTimeOut: 15000,
+        fragLoadingTimeOut: 30000,
+        manifestLoadingRetryDelay: 1000,
+        levelLoadingRetryDelay: 1000,
+        fragLoadingRetryDelay: 1000
+      });
       hlsRef.current = hls;
+      
       hls.loadSource(channel.url);
       hls.attachMedia(video);
-      
+
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        video.play().catch(() => setIsPlaying(false));
+        if (loadTimeout) window.clearTimeout(loadTimeout);
+        video.play().catch((err) => {
+          console.error('Play error:', err);
+          setIsPlaying(false);
+        });
         setIsLoading(false);
+        setRetryCount(0); // Reset retry count on success
         updateStreamHealth('healthy');
-        
-        // Get available qualities
-        const levels = hls.levels.map(level => `${level.height}p`);
-        setAvailableQualities(['auto', ...levels]);
+        setAvailableQualities(['auto', ...hls!.levels.map(l => `${l.height}p`)]);
       });
-      
+
       hls.on(Hls.Events.ERROR, (event, data) => {
+        console.error('HLS Error:', data.type, data.details, data.fatal);
+        
         if (data.fatal) {
+          if (loadTimeout) window.clearTimeout(loadTimeout);
           updateStreamHealth('failed');
-          setError('Stream unavailable. Please try another channel.');
-          setIsLoading(false);
           
-          // Auto-retry after 3 seconds
-          setTimeout(retryStream, 3000);
+          switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              console.error('Network error - attempting recovery');
+              if (retryCount < 3) {
+                setError('Network error - retrying...');
+                setRetryCount(prev => prev + 1);
+                setTimeout(() => {
+                  if (hls) {
+                    hls.startLoad();
+                  }
+                }, 1500);
+              } else {
+                console.log('Max retries reached, skipping to next channel');
+                setIsLoading(false);
+                onNext();
+              }
+              break;
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              console.error('Media error - attempting recovery');
+              if (retryCount < 2) {
+                setRetryCount(prev => prev + 1);
+                hls.recoverMediaError();
+              } else {
+                console.log('Media error recovery failed, skipping to next channel');
+                setIsLoading(false);
+                onNext();
+              }
+              break;
+            default:
+              console.log('Fatal error, skipping to next channel');
+              setIsLoading(false);
+              onNext();
+              break;
+          }
         }
       });
 
-      // Track bandwidth usage
       hls.on(Hls.Events.FRAG_LOADED, (event, data) => {
-        const bytes = data.frag.stats.total;
-        setBandwidthUsage(prev => prev + bytes);
-        StorageService.addBandwidthUsage(bytes);
+        if (loadTimeout) window.clearTimeout(loadTimeout);
+        setBandwidthUsage(prev => prev + data.frag.stats.total);
       });
-
-      // Get audio tracks
-      hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, () => {
-        setAudioTracks(hls.audioTracks);
-      });
-      
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = channel.url;
-      const onLoaded = () => {
-        video.play().catch(() => {});
+      video.onloadedmetadata = () => {
+        if (loadTimeout) window.clearTimeout(loadTimeout);
+        video.play().catch(() => { });
         setIsLoading(false);
+        setRetryCount(0);
         updateStreamHealth('healthy');
       };
-      video.addEventListener('loadedmetadata', onLoaded);
-      return () => video.removeEventListener('loadedmetadata', onLoaded);
+      video.onerror = () => {
+        if (loadTimeout) window.clearTimeout(loadTimeout);
+        updateStreamHealth('failed');
+        setIsLoading(false);
+        console.log('Native video error, skipping to next channel');
+        onNext();
+      };
     }
 
-    return () => { 
+    return () => {
+      if (loadTimeout) window.clearTimeout(loadTimeout);
       trackWatchTime();
       if (hls) {
         hls.destroy();
         hlsRef.current = null;
       }
     };
-  }, [channel, trackWatchTime, updateStreamHealth, retryStream]);
+  }, [channel, retryCount, trackWatchTime, updateStreamHealth]);
 
   const togglePlay = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-        trackWatchTime(); // Save watch time when pausing
-      } else {
-        videoRef.current.play().catch(() => {});
-        // Reset watch start time when resuming
-        watchStartTime.current = Date.now();
-      }
-      setIsPlaying(!isPlaying);
-      resetControlsTimer();
-    }
+    if (!videoRef.current) return;
+    if (isPlaying) videoRef.current.pause();
+    else videoRef.current.play().catch(() => { });
+    setIsPlaying(!isPlaying);
+    resetControlsTimer();
   };
 
   const changePlaybackRate = (rate: number) => {
@@ -333,72 +279,25 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   const changeQuality = (quality: string) => {
     if (!hlsRef.current) return;
-    
     setSelectedQuality(quality);
-    
-    if (quality === 'auto') {
-      hlsRef.current.currentLevel = -1;
-    } else {
-      const levelIndex = hlsRef.current.levels.findIndex(level => `${level.height}p` === quality);
-      if (levelIndex >= 0) {
-        hlsRef.current.currentLevel = levelIndex;
-      }
-    }
-  };
-
-  const changeAudioTrack = (trackIndex: number) => {
-    if (hlsRef.current && trackIndex < audioTracks.length) {
-      hlsRef.current.audioTrack = trackIndex;
-      setSelectedAudioTrack(trackIndex);
+    if (quality === 'auto') hlsRef.current.currentLevel = -1;
+    else {
+      const idx = hlsRef.current.levels.findIndex(l => `${l.height}p` === quality);
+      if (idx >= 0) hlsRef.current.currentLevel = idx;
     }
   };
 
   const toggleFullscreen = async () => {
-    try {
-      if (isFullscreen) {
-        // Exit fullscreen
-        if (document.exitFullscreen) {
-          await document.exitFullscreen();
-        } else if ((document as any).webkitExitFullscreen) {
-          await (document as any).webkitExitFullscreen();
-        } else if ((document as any).mozCancelFullScreen) {
-          await (document as any).mozCancelFullScreen();
-        } else if ((document as any).msExitFullscreen) {
-          await (document as any).msExitFullscreen();
-        }
-      } else {
-        // Enter fullscreen
-        const element = videoRef.current?.parentElement || document.documentElement;
-        if (element.requestFullscreen) {
-          await element.requestFullscreen();
-        } else if ((element as any).webkitRequestFullscreen) {
-          await (element as any).webkitRequestFullscreen();
-        } else if ((element as any).mozRequestFullScreen) {
-          await (element as any).mozRequestFullScreen();
-        } else if ((element as any).msRequestFullscreen) {
-          await (element as any).msRequestFullscreen();
-        }
-      }
-    } catch (error) {
-      console.error('Fullscreen toggle failed:', error);
-    }
-  };
-
-  const handleVideoDoubleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    toggleFullscreen();
-  };
-
-  const formatBandwidth = (bytes: number): string => {
-    const mb = bytes / (1024 * 1024);
-    return `${mb.toFixed(1)} MB`;
+    const el = videoRef.current?.parentElement || document.documentElement;
+    if (isFullscreen) await document.exitFullscreen().catch(() => { });
+    else await el.requestFullscreen().catch(() => { });
   };
 
   if (!channel) return null;
 
-return (
-    <div 
-      className="flex-1 bg-black relative overflow-hidden flex flex-col group cursor-none"
+  return (
+    <div
+      className="flex-1 bg-black relative overflow-hidden flex flex-col group"
       onMouseMove={resetControlsTimer}
       onTouchStart={resetControlsTimer}
       style={{ cursor: showControls ? 'default' : 'none' }}
@@ -407,237 +306,184 @@ return (
         ref={videoRef}
         className="w-full h-full object-contain"
         onClick={togglePlay}
-        onDoubleClick={handleVideoDoubleClick}
+        onDoubleClick={toggleFullscreen}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         playsInline
       />
 
-      {/* Channel Name Overlay - Center Top (Shows on Hover) */}
-      <div className={`absolute top-6 left-1/2 transform -translate-x-1/2 transition-all duration-300 z-50 ${showControls ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'}`}>
-        <div className="flex items-center gap-3 bg-black/60 backdrop-blur-xl px-6 py-3 rounded-2xl border border-white/10 shadow-2xl">
-          {channel.logo && (
-            <img 
-              src={channel.logo} 
-              className="w-8 h-8 object-contain rounded-lg bg-white/10" 
-              alt="" 
-              onError={(e: any) => (e.currentTarget.style.display = 'none')} 
-            />
-          )}
-          <div className="flex flex-col items-center">
-            <h3 className="text-base sm:text-lg lg:text-xl font-black text-white uppercase tracking-tight text-center leading-tight">
-              {channel.name}
-            </h3>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-[10px] sm:text-xs font-bold text-blue-400 uppercase tracking-widest">
-                {channel.group}
-              </span>
-              {streamHealth && (
-                <div className={`w-2 h-2 rounded-full ${
-                  streamHealth.status === 'healthy' ? 'bg-green-500' : 
-                  streamHealth.status === 'slow' ? 'bg-yellow-500' : 'bg-red-500'
-                }`} title={`Stream ${streamHealth.status}`} />
-              )}
+      {/* Top Header Overlay */}
+      <div className={`absolute top-0 inset-x-0 p-4 sm:p-6 lg:p-8 bg-gradient-to-b from-black/95 via-black/40 to-transparent transition-opacity duration-500 z-50 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 overflow-hidden">
+            <button
+              onClick={onExit}
+              className="flex items-center justify-center p-2.5 sm:p-3 bg-white/10 hover:bg-white/20 rounded-xl sm:rounded-2xl transition-all border border-white/10 active:scale-95 group flex-shrink-0 backdrop-blur-xl"
+              title="Exit to Gallery"
+            >
+              <ChevronLeft size={20} className="text-white group-hover:-translate-x-0.5 transition-transform" />
+            </button>
+
+            <div className="h-8 sm:h-10 w-[1px] bg-white/10 hidden sm:block" />
+
+            {channel.logo && (
+              <img src={channel.logo} className="w-8 h-8 sm:w-10 sm:h-10 object-contain rounded-xl bg-white/10 p-1 flex-shrink-0" alt="" />
+            )}
+            <div className="overflow-hidden">
+              <h3 className="text-sm sm:text-base lg:text-lg font-black text-white uppercase tracking-tight leading-tight truncate">
+                {channel.name}
+              </h3>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-[8px] sm:text-[10px] font-bold text-blue-400 uppercase tracking-widest truncate">{channel.group}</span>
+                {streamHealth && (
+                  <div className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full ${streamHealth.status === 'healthy' ? 'bg-green-500' : 'bg-red-500'}`} />
+                )}
+              </div>
             </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
+            {onShowKeyboard && (
+              <button onClick={onShowKeyboard} className="p-2 sm:p-3 bg-white/10 hover:bg-white/20 rounded-full transition-all backdrop-blur-md border border-white/5 text-white hidden sm:flex" title="Keyboard Shortcuts">
+                <KeyboardIcon size={18} />
+              </button>
+            )}
+            {onMinimize && (
+              <button onClick={onMinimize} className="p-2 sm:p-3 bg-white/10 hover:bg-white/20 rounded-full transition-all backdrop-blur-md border border-white/5 text-white" title="Minimize">
+                <Minimize2 size={18} />
+              </button>
+            )}
+            <button onClick={() => setShowSettings(!showSettings)} className={`p-2 sm:p-3 rounded-full transition-all backdrop-blur-md border border-white/5 ${showSettings ? 'bg-blue-600 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`} title="Settings">
+              <Settings size={18} />
+            </button>
+            <button onClick={onToggleFavorite} className={`p-2 sm:p-3 rounded-full transition-all ${isFavorite ? 'bg-amber-400 text-slate-950 shadow-lg shadow-amber-400/20' : 'bg-white/10 text-white backdrop-blur-md border border-white/5'}`} title="Favorite">
+              <Star size={18} fill={isFavorite ? "currentColor" : "none"} strokeWidth={3} />
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Top Right Controls */}
-      <div className={`absolute top-4 sm:top-6 lg:top-8 right-4 sm:right-6 lg:right-8 flex items-center gap-2 transition-opacity duration-500 z-50 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        {/* Minimize Button */}
-        {onMinimize && (
-          <button 
-            onClick={onMinimize}
-            className="p-2 sm:p-3 bg-white/10 hover:bg-white/20 rounded-full transition-all backdrop-blur-md border border-white/5"
-            title="Minimize to mini player"
-          >
-            <Minimize2 size={14} className="text-white" />
-          </button>
-        )}
-
-        {/* Settings Button */}
-        <button 
-          onClick={() => setShowSettings(!showSettings)}
-          className="p-2 sm:p-3 bg-white/10 hover:bg-white/20 rounded-full transition-all backdrop-blur-md border border-white/5"
-          title="Player settings"
-        >
-          <Settings size={14} className="text-white" />
-        </button>
-
-        {/* Favorite Button */}
-        <button 
-          onClick={onToggleFavorite}
-          className={`p-2 sm:p-3 rounded-full transition-all ${
-            isFavorite ? 'bg-amber-400 text-slate-950 shadow-xl shadow-amber-400/30' : 'bg-white/10 text-white backdrop-blur-md border border-white/5'
-          }`}
-        >
-          <Star size={14} fill={isFavorite ? "currentColor" : "none"} strokeWidth={3} />
-        </button>
-      </div>
-
-      {/* Fullscreen Indicator - Auto-hide after 5 seconds */}
-      {isFullscreen && showFullscreenMessage && (
-        <div className="absolute top-6 left-1/2 transform -translate-x-1/2 bg-black/80 backdrop-blur-xl px-6 py-3 rounded-full border border-white/20 z-50 animate-in fade-in slide-in-from-top-4 duration-500">
-          <span className="text-sm font-bold text-white uppercase tracking-wider">Fullscreen Mode • Double-click to exit</span>
-        </div>
-      )}
-
-      {/* Settings Panel */}
+      {/* Settings Modal */}
       {showSettings && (
-        <div className="absolute top-20 right-4 bg-slate-900/95 backdrop-blur-xl rounded-2xl border border-white/10 p-4 z-60 min-w-64">
-          <div className="space-y-4">
-            {/* Playback Speed */}
+        <div className="absolute top-24 right-8 bg-slate-900/95 backdrop-blur-2xl rounded-2xl border border-white/10 p-6 z-[60] min-w-[280px] shadow-2xl animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="space-y-6">
             <div>
-              <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
-                <Gauge size={14} className="inline mr-2" />
-                Playback Speed
+              <label className="flex items-center gap-2 text-[10px] font-black text-blue-400 uppercase tracking-widest mb-3">
+                <Gauge size={14} /> Playback Speed
               </label>
-              <div className="grid grid-cols-3 gap-1">
+              <div className="grid grid-cols-3 gap-2">
                 {PLAYBACK_RATES.map(rate => (
-                  <button
-                    key={rate}
-                    onClick={() => changePlaybackRate(rate)}
-                    className={`p-2 text-xs rounded-lg transition-all ${
-                      playbackRate === rate 
-                        ? 'bg-blue-600 text-white' 
-                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                    }`}
-                  >
+                  <button key={rate} onClick={() => changePlaybackRate(rate)} className={`py-2 text-xs font-bold rounded-lg transition-all ${playbackRate === rate ? 'bg-blue-600 text-white' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}>
                     {rate}x
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Quality Selection */}
             {availableQualities.length > 1 && (
               <div>
-                <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
-                  <Monitor size={14} className="inline mr-2" />
-                  Quality
+                <label className="flex items-center gap-2 text-[10px] font-black text-blue-400 uppercase tracking-widest mb-3">
+                  <Monitor size={14} /> Quality
                 </label>
-                <select
-                  value={selectedQuality}
-                  onChange={(e) => changeQuality(e.target.value)}
-                  className="w-full p-2 bg-slate-800 border border-white/10 rounded-lg text-white text-sm"
-                >
-                  {availableQualities.map(quality => (
-                    <option key={quality} value={quality}>
-                      {quality === 'auto' ? 'Auto' : quality}
-                    </option>
+                <div className="grid grid-cols-2 gap-2">
+                  {availableQualities.map(q => (
+                    <button key={q} onClick={() => changeQuality(q)} className={`py-2 text-xs font-bold rounded-lg transition-all ${selectedQuality === q ? 'bg-blue-600 text-white' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}>
+                      {q === 'auto' ? 'Auto' : q}
+                    </button>
                   ))}
-                </select>
-              </div>
-            )}
-
-            {/* Audio Tracks */}
-            {audioTracks.length > 1 && (
-              <div>
-                <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
-                  <Headphones size={14} className="inline mr-2" />
-                  Audio Track
-                </label>
-                <select
-                  value={selectedAudioTrack}
-                  onChange={(e) => changeAudioTrack(parseInt(e.target.value))}
-                  className="w-full p-2 bg-slate-800 border border-white/10 rounded-lg text-white text-sm"
-                >
-                  {audioTracks.map((track, index) => (
-                    <option key={index} value={index}>
-                      {track.name || `Track ${index + 1}`} {track.lang && `(${track.lang})`}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* Bandwidth Usage */}
-            <div className="pt-2 border-t border-white/10">
-              <div className="text-xs text-slate-400">
-                Session: {formatBandwidth(bandwidthUsage)}
-              </div>
-              {retryCount > 0 && (
-                <div className="text-xs text-yellow-400 mt-1">
-                  Retries: {retryCount}/3
                 </div>
-              )}
+              </div>
+            )}
+
+            <div className="pt-4 border-t border-white/5">
+              <div className="flex justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                <span>Bandwidth</span>
+                <span className="text-slate-300">{(bandwidthUsage / (1024 * 1024)).toFixed(1)} MB</span>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Overlays - Responsive */}
+      {/* Retry indicator - only shown briefly */}
+      {error && error.includes('retrying') && (
+        <div className="absolute top-24 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-xl rounded-2xl px-6 py-3 z-[70] border border-white/10 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex items-center gap-3">
+            <Loader2 size={16} className="animate-spin text-blue-500" />
+            <span className="text-sm font-bold text-white">Retrying connection...</span>
+          </div>
+        </div>
+      )}
+
       {isLoading && !error && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-20">
-          <Loader2 size={32} className="animate-spin text-blue-500" />
+          <Loader2 size={48} className="animate-spin text-blue-500" />
         </div>
       )}
 
-      {error && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/90 z-30 p-4 sm:p-8 text-center">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-red-500/10 rounded-full flex items-center justify-center mb-4 sm:mb-6">
-             <Tv size={24} className="text-red-500" />
-          </div>
-          <h2 className="text-lg sm:text-xl lg:text-2xl font-black text-white uppercase tracking-tighter mb-2">Stream Offline</h2>
-          <p className="text-slate-500 text-[10px] sm:text-xs font-bold uppercase tracking-widest max-w-xs mb-6 sm:mb-8">{error}</p>
-          <div className="flex gap-3">
-            <button 
-              onClick={retryStream}
-              className="flex items-center gap-2 px-6 sm:px-8 py-2.5 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl sm:rounded-2xl font-black uppercase tracking-widest text-[9px] sm:text-[10px] transition touch-target"
-            >
-              <RotateCcw size={12} />
-              Retry ({3 - retryCount} left)
-            </button>
-            <button 
-              onClick={() => window.location.reload()}
-              className="px-6 sm:px-8 py-2.5 sm:py-3 bg-white text-slate-950 rounded-xl sm:rounded-2xl font-black uppercase tracking-widest text-[9px] sm:text-[10px] hover:bg-slate-200 transition touch-target"
-            >
-              Reload App
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Bottom Controls */}
+      <div className={`absolute inset-x-0 bottom-0 p-6 lg:p-8 bg-gradient-to-t from-black via-black/80 to-transparent transition-all duration-700 transform ${showControls ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0 pointer-events-none'}`}>
+        <div className="max-w-5xl mx-auto flex flex-col gap-6">
 
-      {/* Cinematic Controls - Responsive */}
-      <div className={`absolute inset-x-0 bottom-0 p-4 sm:p-6 lg:p-8 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent transition-all duration-700 transform ${showControls ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0 pointer-events-none'}`}>
-        <div className="max-w-4xl mx-auto flex flex-col gap-4 sm:gap-6">
+          {currentProgram && (
+            <div className="flex flex-col gap-3 bg-white/5 backdrop-blur-xl rounded-2xl p-5 border border-white/10">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="px-1.5 py-0.5 bg-blue-600 rounded text-[8px] font-black uppercase tracking-widest text-white">Live</span>
+                    <h4 className="text-sm font-black text-white uppercase truncate tracking-tight">{currentProgram.title}</h4>
+                  </div>
+                  <p className="text-xs text-slate-400 line-clamp-1">{currentProgram.description}</p>
+                </div>
+
+                <div className="hidden md:flex flex-col items-end text-right gap-0.5">
+                  {nextChannelName ? (
+                    <>
+                      <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest mb-0.5">Next Channel</span>
+                      <span className="text-sm font-black text-white truncate max-w-[180px] uppercase tracking-tighter leading-none">{nextChannelName}</span>
+                      {nextProgram && (
+                        <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-1 opacity-60">Upcoming: {nextProgram.title}</span>
+                      )}
+                    </>
+                  ) : nextProgram && (
+                    <>
+                      <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Next Show</span>
+                      <span className="text-xs font-bold text-slate-300 truncate max-w-[150px] uppercase tracking-tighter">{nextProgram.title}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+              <div className="relative h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                <div className="absolute inset-y-0 left-0 bg-blue-600 transition-all duration-1000 shadow-[0_0_10px_rgba(37,99,235,0.5)]" style={{ width: `${Math.min(100, progress)}%` }} />
+                <div className="absolute inset-0 flex items-center justify-between px-3 text-[7px] font-black text-white/20 uppercase tracking-[0.2em]">
+                  <span>{new Date(currentProgram.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span>{new Date(currentProgram.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4 sm:gap-8">
-              <button onClick={onPrevious} className="text-white/60 hover:text-white transition active:scale-90 p-1.5 sm:p-2 touch-target">
-                <SkipBack size={20} fill="currentColor" />
+            <div className="flex items-center gap-8">
+              <button onClick={onPrevious} className="text-white/60 hover:text-white transition active:scale-90"><SkipBack size={24} fill="currentColor" /></button>
+              <button onClick={togglePlay} className="w-16 h-16 bg-white text-slate-950 rounded-full flex items-center justify-center shadow-2xl active:scale-90 transition transform">
+                {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" className="ml-1" />}
               </button>
-              <button onClick={togglePlay} className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-white text-slate-950 rounded-full flex items-center justify-center shadow-2xl active:scale-90 transition transform touch-target">
-                {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-0.5 sm:ml-1" />}
-              </button>
-              <button onClick={onNext} className="text-white/60 hover:text-white transition active:scale-90 p-1.5 sm:p-2 touch-target">
-                <SkipForward size={20} fill="currentColor" />
-              </button>
+              <button onClick={onNext} className="text-white/60 hover:text-white transition active:scale-90"><SkipForward size={24} fill="currentColor" /></button>
             </div>
 
-            <div className="flex items-center gap-3 sm:gap-6">
-              <div className="hidden sm:flex items-center gap-2 sm:gap-4 bg-white/5 p-1.5 sm:p-2 rounded-xl sm:rounded-2xl border border-white/5">
-                <button onClick={() => { if(videoRef.current) { videoRef.current.muted = !isMuted; setIsMuted(!isMuted); } }} className="text-white/60 hover:text-white transition touch-target">
-                  {isMuted || volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
+            <div className="flex items-center gap-6">
+              <div className="hidden sm:flex items-center gap-4 bg-white/5 p-2 rounded-2xl border border-white/5">
+                <button onClick={() => { if (videoRef.current) { videoRef.current.muted = !isMuted; setIsMuted(!isMuted); } }} className="text-white/60 hover:text-white">
+                  {isMuted || volume === 0 ? <VolumeX size={18} /> : <Volume2 size={18} />}
                 </button>
-                <input
-                  type="range"
-                  min="0" max="1" step="0.05"
-                  value={volume}
-                  onChange={(e: any) => { const v = parseFloat(e.target.value); setVolume(v); if(videoRef.current) videoRef.current.volume = v; }}
-                  className="w-16 sm:w-24 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                />
+                <input type="range" min="0" max="1" step="0.05" value={volume} onChange={(e: any) => { const v = parseFloat(e.target.value); setVolume(v); if (videoRef.current) videoRef.current.volume = v; }} className="w-24 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-blue-500" />
               </div>
-
-              <div className="flex gap-2 sm:gap-4">
+              <div className="flex gap-4">
                 {isPiPSupported && (
-                  <button onClick={async () => { if(videoRef.current) { if(document.pictureInPictureElement) await document.exitPictureInPicture(); else await videoRef.current.requestPictureInPicture(); } }} className="p-2 sm:p-3 bg-white/5 hover:bg-white/10 rounded-xl sm:rounded-2xl text-white/80 transition touch-target" title="PiP">
-                    <PictureInPicture2 size={14} />
-                  </button>
+                  <button onClick={async () => { if (videoRef.current) (document.pictureInPictureElement) ? await document.exitPictureInPicture() : await videoRef.current.requestPictureInPicture(); }} className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl text-white transition"><PictureInPicture2 size={16} /></button>
                 )}
-                <button onClick={toggleFullscreen} className="p-2 sm:p-3 bg-white/5 hover:bg-white/10 rounded-xl sm:rounded-2xl text-white/80 transition touch-target" title="Fullscreen">
-                  <Maximize size={14} />
-                </button>
+                <button onClick={toggleFullscreen} className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl text-white transition"><Maximize size={16} /></button>
               </div>
             </div>
           </div>

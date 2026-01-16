@@ -126,6 +126,47 @@ Modify `index.css` for custom themes:
 }
 ```
 
+## 🐛 Troubleshooting
+
+### Stream Shows "Offline" or Won't Load
+
+**Common Causes:**
+1. **Geo-restrictions** - Some streams are region-locked
+2. **CORS policies** - Browser security blocking cross-origin requests
+3. **Channel offline** - The broadcast source is temporarily down
+4. **Network issues** - Slow or unstable internet connection
+
+**Solutions:**
+- Click "Skip to Next" to try another channel
+- Click "Reload Stream" to retry the current channel
+- Check your internet connection
+- Try a different browser (Chrome/Firefox recommended)
+- Some channels may require VPN for geo-restricted content
+- Wait a few minutes and retry - channels may come back online
+
+### Video Player Not Loading
+
+**Check:**
+- Browser supports HLS (Chrome 90+, Firefox 88+, Safari 14+)
+- JavaScript is enabled
+- No ad-blockers interfering with video playback
+- Clear browser cache and reload
+
+### Voice Search Not Working
+
+**Requirements:**
+- HTTPS connection (required for Web Speech API)
+- Microphone permissions granted
+- Supported browser (Chrome, Edge)
+
+### Performance Issues
+
+**Optimize:**
+- Close other tabs/applications
+- Lower video quality in settings
+- Disable bandwidth tracking
+- Clear watch history periodically
+
 ## 📊 Data Management
 
 ### Storage Structure
