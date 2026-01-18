@@ -1,12 +1,24 @@
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  maxAlternatives: number;
+  onresult: (event: any) => void;
+  onerror: (event: any) => void;
+  onend: () => void;
+  start(): void;
+  stop(): void;
+}
+
 export class VoiceSearchService {
-  private recognition: SpeechRecognition | null = null;
+  private recognition: any | null = null;
   private isSupported = false;
 
   constructor() {
     this.isSupported = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
-    
+
     if (this.isSupported) {
-      const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       this.recognition = new SpeechRecognition();
       this.setupRecognition();
     }
