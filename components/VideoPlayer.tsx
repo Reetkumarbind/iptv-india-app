@@ -149,6 +149,18 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     setIsLoading(true);
     setError(null);
 
+    // Check for Mixed Content (HTTP on HTTPS)
+    const isHttps = window.location.protocol === 'https:';
+    const isChannelHttp = channel.url.startsWith('http:');
+
+    if (isHttps && isChannelHttp) {
+      console.warn('Mixed Content detected: Loading HTTP stream on HTTPS site');
+      setError('Browser Security Block: This channel uses an insecure (HTTP) link which is blocked on this secure (HTTPS) site. Try using a browser with "Insecure content" allowed for this site.');
+      setIsLoading(false);
+      // We don't auto-skip here because we want to show the specific error
+      return;
+    }
+
     // Set a timeout for loading (20 seconds)
     loadTimeout = window.setTimeout(() => {
       if (isLoading) {
@@ -158,8 +170,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         if (hls) {
           hls.destroy();
         }
-        // Auto skip to next channel
-        onNext();
+        setError('Stream loading timed out. The server might be down or blocked by your provider.');
       }
     }, 20000);
 
@@ -197,10 +208,21 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
       hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
         if (loadTimeout) window.clearTimeout(loadTimeout);
-        video.play().catch((err) => {
-          console.error('Play error:', err);
-          setIsPlaying(false);
-        });
+
+        // Handle play request with abort protection
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((err) => {
+            if (err.name === 'AbortError') {
+              console.log('Playback aborted - normal during channel switch');
+            } else {
+              console.error('Play error:', err);
+              setError(`Playback blocked by browser. Please click Play manually.`);
+            }
+            setIsPlaying(false);
+          });
+        }
+
         setIsLoading(false);
         setRetryCount(0);
         updateStreamHealth('healthy');
@@ -450,7 +472,34 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         </div>
       )}
 
-      {/* Center UI Overlay */}
+      {/* Error UI Overlay */}
+      {error && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-[20px] z-[70] p-8 text-center animate-in fade-in duration-500">
+          <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mb-8 border border-red-500/20">
+            <Monitor className="text-red-500" size={40} />
+          </div>
+          <h3 className="text-xl font-black text-white uppercase tracking-[0.3em] mb-4 italic">Stream Offline</h3>
+          <p className="text-text-muted text-[10px] font-bold uppercase tracking-widest max-w-md leading-relaxed mb-10">
+            {error}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={() => window.location.reload()}
+              className="px-8 py-4 bg-white text-black text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl hover:scale-105 transition-transform"
+            >
+              Reload Engine
+            </button>
+            <button
+              onClick={onNext}
+              className="px-8 py-4 glass text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl border-white/10 hover:bg-white/10 transition-all"
+            >
+              Skip Channel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Loading UI Overlay */}
       {isLoading && !error && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-[12px] z-20">
           <div className="relative transform scale-75 sm:scale-100">
