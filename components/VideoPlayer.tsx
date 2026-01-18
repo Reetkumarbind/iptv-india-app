@@ -84,15 +84,24 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       (document as any).pictureInPictureEnabled
     );
 
-    const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
+    const handleFullscreenChange = () => {
+      const isFull = !!(document.fullscreenElement || (document as any).webkitFullscreenElement || (document as any).mozFullScreenElement || (document as any).msFullscreenElement);
+      setIsFullscreen(isFull);
+    };
     const handleGlobalInteraction = () => resetControlsTimer();
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
     document.addEventListener('keydown', handleGlobalInteraction);
     document.addEventListener('touchstart', handleGlobalInteraction);
 
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
       document.removeEventListener('keydown', handleGlobalInteraction);
       document.removeEventListener('touchstart', handleGlobalInteraction);
     };
@@ -365,25 +374,35 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   };
 
   const toggleFullscreen = async () => {
-    const el = containerRef.current || document.documentElement;
+    const el = containerRef.current;
+    if (!el) return;
+
+    const isFull = !!(document.fullscreenElement || (document as any).webkitFullscreenElement || (document as any).mozFullScreenElement || (document as any).msFullscreenElement);
+
     try {
-      if (document.fullscreenElement) {
-        await document.exitFullscreen();
+      if (isFull) {
+        if (document.exitFullscreen) await document.exitFullscreen();
+        else if ((document as any).webkitExitFullscreen) await (document as any).webkitExitFullscreen();
+        else if ((document as any).mozCancelFullScreen) await (document as any).mozCancelFullScreen();
+        else if ((document as any).msExitFullscreen) await (document as any).msExitFullscreen();
       } else {
-        if (el.requestFullscreen) {
-          await el.requestFullscreen();
-        } else if ((el as any).webkitRequestFullscreen) {
-          /* Safari/iOS fallback */
-          await (el as any).webkitRequestFullscreen();
-        } else if ((el as any).msRequestFullscreen) {
-          await (el as any).msRequestFullscreen();
-        }
+        if (el.requestFullscreen) await el.requestFullscreen();
+        else if ((el as any).webkitRequestFullscreen) await (el as any).webkitRequestFullscreen();
+        else if ((el as any).mozRequestFullScreen) await (el as any).mozRequestFullScreen();
+        else if ((el as any).msRequestFullscreen) await (el as any).msRequestFullscreen();
       }
     } catch (err) {
-      console.warn('Fullscreen request failed:', err);
-      // Fallback: try video element directly if container fails
-      if (!document.fullscreenElement && videoRef.current?.requestFullscreen) {
-        videoRef.current.requestFullscreen().catch(() => { });
+      console.warn('Main container fullscreen failed, trying video element fallback:', err);
+      if (videoRef.current) {
+        try {
+          if ((videoRef.current as any).webkitEnterFullscreen) {
+            (videoRef.current as any).webkitEnterFullscreen();
+          } else if (videoRef.current.requestFullscreen) {
+            videoRef.current.requestFullscreen();
+          }
+        } catch (vErr) {
+          console.error('Video fallback fullscreen failed:', vErr);
+        }
       }
     }
   };
@@ -409,6 +428,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       onMouseMove={resetControlsTimer}
       onTouchStart={resetControlsTimer}
       onTouchEnd={handleTouchEnd}
+      onDoubleClick={toggleFullscreen}
       style={{ cursor: showControls ? 'default' : 'none' }}
     >
       <video
