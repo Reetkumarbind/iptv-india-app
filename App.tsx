@@ -135,23 +135,6 @@ const App: React.FC = () => {
       }
     });
 
-    keyboardService.addShortcut({
-      key: 'f',
-      description: 'Toggle Fullscreen',
-      action: () => {
-        if (viewMode === 'player') {
-          const video = document.querySelector('video');
-          if (video) {
-            const event = new MouseEvent('dblclick', {
-              bubbles: true,
-              cancelable: true,
-              view: window
-            });
-            video.dispatchEvent(event);
-          }
-        }
-      }
-    });
 
     keyboardService.addShortcut({
       key: 'h',

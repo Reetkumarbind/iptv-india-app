@@ -188,12 +188,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
     // Local keyboard shortcuts for player
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === 'a') {
+      const key = e.key.toLowerCase();
+      if (key === 'a') {
         setAspectRatio(prev => {
           if (prev === 'contain') return 'cover';
           if (prev === 'cover') return 'fill';
           return 'contain';
         });
+      } else if (key === 'f') {
+        toggleFullscreen();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -386,10 +389,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         else if ((document as any).mozCancelFullScreen) await (document as any).mozCancelFullScreen();
         else if ((document as any).msExitFullscreen) await (document as any).msExitFullscreen();
       } else {
-        if (el.requestFullscreen) await el.requestFullscreen();
-        else if ((el as any).webkitRequestFullscreen) await (el as any).webkitRequestFullscreen();
-        else if ((el as any).mozRequestFullScreen) await (el as any).mozRequestFullScreen();
-        else if ((el as any).msRequestFullscreen) await (el as any).msRequestFullscreen();
+        const options = { navigationUI: 'hide' } as any;
+        if (el.requestFullscreen) await el.requestFullscreen(options);
+        else if ((el as any).webkitRequestFullscreen) await (el as any).webkitRequestFullscreen(options);
+        else if ((el as any).mozRequestFullScreen) await (el as any).mozRequestFullScreen(options);
+        else if ((el as any).msRequestFullscreen) await (el as any).msRequestFullscreen(options);
+        else if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen(options);
       }
     } catch (err) {
       console.warn('Main container fullscreen failed, trying video element fallback:', err);
