@@ -90,7 +90,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
               alt={channel.name}
               loading="lazy"
               onLoad={() => setImgLoaded(true)}
-              className={`w-full h-full object-cover filter drop-shadow-2xl transition-all duration-700 group-hover:scale-110 ${imgLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+              className={`w-full h-full object-cover object-top filter drop-shadow-2xl transition-all duration-700 group-hover:scale-110 ${imgLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
                 }`}
               onError={() => setImgError(true)}
             />
@@ -146,8 +146,8 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
       <button
         onClick={handleToggleFavorite}
         className={`absolute top-4 right-4 p-2.5 rounded-2xl transition-all duration-300 transform active:scale-90 ${isFavorite
-            ? 'bg-red-500 text-white shadow-lg shadow-red-500/20 scale-110'
-            : 'glass text-white/40 opacity-0 group-hover:opacity-100 scale-90 hover:scale-110 hover:text-white'
+          ? 'bg-red-500 text-white shadow-lg shadow-red-500/20 scale-110'
+          : 'glass text-white/40 opacity-0 group-hover:opacity-100 scale-90 hover:scale-110 hover:text-white'
           }`}
       >
         <Star size={16} fill={isFavorite ? "currentColor" : "none"} strokeWidth={3} />
