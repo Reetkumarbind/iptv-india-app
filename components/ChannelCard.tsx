@@ -90,7 +90,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
               alt={channel.name}
               loading="lazy"
               onLoad={() => setImgLoaded(true)}
-              className={`w-full h-full object-cover object-top filter drop-shadow-2xl transition-all duration-700 group-hover:scale-110 ${imgLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+              className={`w-full h-full object-cover object-[center_15%] filter drop-shadow-2xl transition-all duration-700 group-hover:scale-110 ${imgLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
                 }`}
               onError={() => setImgError(true)}
             />
