@@ -69,6 +69,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [retryCount, setRetryCount] = useState(0);
   const [bandwidthUsage, setBandwidthUsage] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [aspectRatio, setAspectRatio] = useState<'contain' | 'cover' | 'fill'>('contain');
 
   const controlsTimerRef = useRef<number | null>(null);
   const [currentProgram, setCurrentProgram] = useState<EPGProgram | null>(null);
@@ -173,6 +174,18 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         setError('Stream loading timed out. The server might be down or blocked by your provider.');
       }
     }, 20000);
+
+    // Local keyboard shortcuts for player
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === 'a') {
+        setAspectRatio(prev => {
+          if (prev === 'contain') return 'cover';
+          if (prev === 'cover') return 'fill';
+          return 'contain';
+        });
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
 
     const isHls = channel.url.toLowerCase().includes('.m3u8') || channel.url.toLowerCase().includes('manifest');
 
@@ -315,6 +328,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
     return () => {
       if (loadTimeout) window.clearTimeout(loadTimeout);
+      window.removeEventListener('keydown', handleKeyDown);
       trackWatchTime();
       if (hls) {
         hls.destroy();
@@ -365,7 +379,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     >
       <video
         ref={videoRef}
-        className="w-full h-full object-contain"
+        className={`w-full h-full object-${aspectRatio}`}
         onClick={togglePlay}
         onDoubleClick={toggleFullscreen}
         onPlay={() => setIsPlaying(true)}
@@ -435,6 +449,25 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           </h4>
 
           <div className="space-y-8">
+            <div>
+              <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-4 block">Aspect Ratio</label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: 'contain', label: 'ORIGINAL' },
+                  { id: 'cover', label: 'ZOOM' },
+                  { id: 'fill', label: 'STRETCH' }
+                ].map(mode => (
+                  <button
+                    key={mode.id}
+                    onClick={() => setAspectRatio(mode.id as any)}
+                    className={`py-3 text-[10px] font-black rounded-xl transition-all ${aspectRatio === mode.id ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-white/5 text-text-muted hover:bg-white/10 hover:text-white'}`}
+                  >
+                    {mode.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div>
               <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-4 block">Engine Speed</label>
               <div className="grid grid-cols-3 gap-2">
@@ -578,6 +611,22 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                     <PictureInPicture2 size={18} className="sm:size-[20px]" />
                   </button>
                 )}
+                <button
+                  onClick={() => {
+                    setAspectRatio(prev => {
+                      if (prev === 'contain') return 'cover';
+                      if (prev === 'cover') return 'fill';
+                      return 'contain';
+                    });
+                  }}
+                  className="p-3 sm:p-4 glass rounded-xl sm:rounded-2xl text-white hover:bg-white/10 transition-all border-white/10 flex items-center gap-2 group/ar"
+                  title="Cycle Aspect Ratio"
+                >
+                  <Monitor size={18} className="sm:size-[20px]" />
+                  <span className="hidden sm:inline text-[8px] font-black uppercase tracking-tighter opacity-60 group-hover/ar:opacity-100">
+                    {aspectRatio === 'contain' ? 'Original' : aspectRatio === 'cover' ? 'Zoom' : 'Stretch'}
+                  </span>
+                </button>
                 <button onClick={toggleFullscreen} className="p-3 sm:p-4 glass rounded-xl sm:rounded-2xl text-white hover:bg-white/10 transition-all border-white/10">
                   <Maximize size={18} className="sm:size-[20px]" />
                 </button>
