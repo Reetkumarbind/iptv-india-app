@@ -77,7 +77,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
         className="w-full h-full flex flex-col text-left"
       >
         {/* Logo Container */}
-        <div className="relative flex-1 w-full flex items-center justify-center p-6 bg-gradient-to-br from-white/5 to-transparent">
+        <div className="relative flex-1 w-full flex items-center justify-center bg-gradient-to-br from-white/5 to-transparent overflow-hidden">
           {channel.logo && !imgLoaded && !imgError && (
             <div className="absolute inset-0 flex items-center justify-center">
               <Loader2 className="animate-spin text-primary/30" size={24} />
@@ -90,9 +90,8 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
               alt={channel.name}
               loading="lazy"
               onLoad={() => setImgLoaded(true)}
-              className={`w-[80%] h-[80%] object-contain filter drop-shadow-2xl transition-all duration-700 group-hover:scale-110 ${
-                imgLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-              }`}
+              className={`w-full h-full object-cover filter drop-shadow-2xl transition-all duration-700 group-hover:scale-110 ${imgLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+                }`}
               onError={() => setImgError(true)}
             />
           ) : (
@@ -111,7 +110,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
           {/* Live Progress Bar (Always visible if live) */}
           {currentProgram && (
             <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10">
-              <div 
+              <div
                 className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-1000"
                 style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
               />
@@ -146,11 +145,10 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
       {/* Favorite Button */}
       <button
         onClick={handleToggleFavorite}
-        className={`absolute top-4 right-4 p-2.5 rounded-2xl transition-all duration-300 transform active:scale-90 ${
-          isFavorite
+        className={`absolute top-4 right-4 p-2.5 rounded-2xl transition-all duration-300 transform active:scale-90 ${isFavorite
             ? 'bg-red-500 text-white shadow-lg shadow-red-500/20 scale-110'
             : 'glass text-white/40 opacity-0 group-hover:opacity-100 scale-90 hover:scale-110 hover:text-white'
-        }`}
+          }`}
       >
         <Star size={16} fill={isFavorite ? "currentColor" : "none"} strokeWidth={3} />
       </button>
@@ -158,9 +156,8 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
       {/* Feedback Toast */}
       {showFeedback && (
         <div className="absolute inset-x-4 top-4 pointer-events-none fade-in">
-          <div className={`flex items-center justify-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest glass ${
-            isFavorite ? 'text-red-400' : 'text-primary'
-          }`}>
+          <div className={`flex items-center justify-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest glass ${isFavorite ? 'text-red-400' : 'text-primary'
+            }`}>
             {isFavorite ? 'Saved to Favorites' : 'Removed from Favorites'}
           </div>
         </div>

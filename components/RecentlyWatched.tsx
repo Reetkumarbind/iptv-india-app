@@ -62,7 +62,7 @@ const RecentlyWatched: React.FC<RecentlyWatchedProps> = ({
                   <img
                     src={item.logo}
                     alt={item.channelName}
-                    className="w-full h-full object-contain p-6 group-hover:scale-110 transition-transform duration-700"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
