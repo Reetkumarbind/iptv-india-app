@@ -28,7 +28,8 @@ import {
   TrendingUp,
   Clock,
   Globe,
-  Zap
+  Zap,
+  RefreshCw
 } from 'lucide-react';
 
 interface ChannelGalleryProps {
