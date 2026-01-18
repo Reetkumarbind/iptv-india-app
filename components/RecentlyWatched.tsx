@@ -55,40 +55,43 @@ const RecentlyWatched: React.FC<RecentlyWatchedProps> = ({
             <div
               key={item.channelId + item.timestamp}
               onClick={() => onSelectChannel(item.channelId)}
-              className="group flex-shrink-0 w-48 cursor-pointer"
+              className="group flex-shrink-0 w-56 cursor-pointer"
             >
-              <div className="relative aspect-video glass-card overflow-hidden mb-4 border-white/5 hover:scale-105 transition-all">
+              <div className="relative aspect-video glass-card overflow-hidden mb-3 border-white/5 hover:scale-[1.05] transition-all duration-500 shadow-xl hover:shadow-primary/20">
                 {item.logo ? (
                   <img
                     src={item.logo}
                     alt={item.channelName}
-                    className="w-full h-full object-cover object-[center_15%] group-hover:scale-110 transition-transform duration-700"
+                    className="w-full h-full object-cover object-[center_30%] group-hover:scale-110 transition-transform duration-700"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
+                  <div className="w-full h-full flex items-center justify-center bg-slate-900">
                     <Play className="text-white/10" size={32} />
                   </div>
                 )}
 
+                {/* Premium Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-60" />
+
                 {/* Play overlay */}
                 <div className="absolute inset-0 bg-background/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
                   <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-2xl">
-                    <Play className="text-primary ml-1" size={20} fill="currentColor" />
+                    <Play className="text-slate-950 ml-1" size={20} fill="currentColor" />
                   </div>
                 </div>
 
                 {/* Duration badge */}
-                <div className="absolute bottom-2 right-2 glass px-2 py-1 rounded-lg text-[10px] font-bold text-white border-white/10">
+                <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-md text-[8px] font-black text-white border border-white/10 tracking-widest">
                   {formatDuration(item.duration)}
                 </div>
               </div>
 
               <div className="px-1">
-                <h3 className="text-xs font-black text-white truncate uppercase tracking-tight mb-1">{item.channelName}</h3>
-                <div className="flex items-center gap-2">
+                <h3 className="text-[11px] font-bold text-white truncate uppercase tracking-wide group-hover:text-primary transition-colors">{item.channelName}</h3>
+                <div className="flex items-center gap-2 mt-0.5">
                   <span className="text-[9px] font-black text-primary uppercase tracking-widest">{formatTimeAgo(item.timestamp)}</span>
-                  <span className="w-1 h-1 bg-white/20 rounded-full" />
-                  <span className="text-[9px] font-bold text-text-muted uppercase tracking-widest">{channel.group || 'GENERAL'}</span>
+                  <span className="w-1 h-1 bg-white/10 rounded-full" />
+                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{channel.group || 'GENERAL'}</span>
                 </div>
               </div>
             </div>
