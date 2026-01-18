@@ -163,72 +163,77 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       }
     }, 20000);
 
-    if (Hls.isSupported()) {
+    const isHls = channel.url.toLowerCase().includes('.m3u8') || channel.url.toLowerCase().includes('manifest');
+
+    if (isHls && Hls.isSupported()) {
       hls = new Hls({
         enableWorker: true,
         lowLatencyMode: false,
-        maxLoadingDelay: 8,
-        maxBufferLength: 30,
-        maxMaxBufferLength: 60,
-        manifestLoadingTimeOut: 15000,
-        manifestLoadingMaxRetry: 3,
-        levelLoadingTimeOut: 15000,
-        fragLoadingTimeOut: 30000,
+        backBufferLength: 90,
+        maxBufferLength: 60,
+        maxMaxBufferLength: 600,
+        capLevelToPlayerSize: true,
+        autoStartLoad: true,
+        startLevel: -1,
+        // Improved loading settings
+        manifestLoadingTimeOut: 30000,
+        manifestLoadingMaxRetry: 10,
         manifestLoadingRetryDelay: 1000,
+        levelLoadingTimeOut: 30000,
+        levelLoadingMaxRetry: 10,
         levelLoadingRetryDelay: 1000,
-        fragLoadingRetryDelay: 1000
+        fragLoadingTimeOut: 60000,
+        fragLoadingMaxRetry: 10,
+        fragLoadingRetryDelay: 1000,
+        // Better error recovery
+        abrEwmaFastLive: 1,
+        abrEwmaSlowLive: 1.5,
+        testBandwidth: true,
       });
       hlsRef.current = hls;
 
       hls.loadSource(channel.url);
       hls.attachMedia(video);
 
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
         if (loadTimeout) window.clearTimeout(loadTimeout);
         video.play().catch((err) => {
           console.error('Play error:', err);
           setIsPlaying(false);
         });
         setIsLoading(false);
-        setRetryCount(0); // Reset retry count on success
+        setRetryCount(0);
         updateStreamHealth('healthy');
-        setAvailableQualities(['auto', ...hls!.levels.map(l => `${l.height}p`)]);
+        setAvailableQualities(['auto', ...data.levels.map(l => `${l.height}p`)]);
       });
 
       hls.on(Hls.Events.ERROR, (event, data) => {
-        console.error('HLS Error:', data.type, data.details, data.fatal);
-
         if (data.fatal) {
-          if (loadTimeout) window.clearTimeout(loadTimeout);
+          console.error('Fatal HLS error:', data.details);
           updateStreamHealth('failed');
 
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
-              console.error('Network error - attempting recovery');
-              if (retryCount < 3) {
-                setError('Network error - retrying...');
+              if (retryCount < 5) {
                 setRetryCount(prev => prev + 1);
-                setTimeout(() => {
-                  if (hls) {
-                    hls.startLoad();
-                  }
-                }, 1500);
+                hls?.startLoad();
               } else {
-                console.log('Max retries reached, skipping to next channel');
                 setIsLoading(false);
                 onNext();
               }
               break;
             case Hls.ErrorTypes.MEDIA_ERROR:
-              console.error('Media error - attempting recovery');
-              if (retryCount < 2) {
+              if (retryCount < 3) {
                 setRetryCount(prev => prev + 1);
-                hls.recoverMediaError();
+                hls?.recoverMediaError();
               } else {
-                console.log('Media error recovery failed, skipping to next channel');
                 setIsLoading(false);
                 onNext();
               }
+              break;
+            case Hls.ErrorTypes.OTHER_ERROR:
+              setError(`Engine Error: ${data.details}. This channel might use an unsupported codec (like H.265/HEVC or AC3 audio) in your browser.`);
+              setIsLoading(false);
               break;
             default:
               console.log('Fatal error, skipping to next channel');
@@ -243,22 +248,47 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         if (loadTimeout) window.clearTimeout(loadTimeout);
         setBandwidthUsage(prev => prev + data.frag.stats.total);
       });
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    } else if (video.canPlayType('application/vnd.apple.mpegurl') && isHls) {
+      // Native HLS (Safari)
       video.src = channel.url;
-      video.onloadedmetadata = () => {
+      video.addEventListener('loadedmetadata', () => {
         if (loadTimeout) window.clearTimeout(loadTimeout);
         video.play().catch(() => { });
         setIsLoading(false);
         setRetryCount(0);
         updateStreamHealth('healthy');
-      };
-      video.onerror = () => {
+      });
+      video.addEventListener('error', () => {
         if (loadTimeout) window.clearTimeout(loadTimeout);
         updateStreamHealth('failed');
         setIsLoading(false);
-        console.log('Native video error, skipping to next channel');
         onNext();
+      });
+    } else {
+      // Direct video playback (MP4, etc.)
+      console.log('Trying direct video playback for:', channel.url);
+      video.src = channel.url;
+      video.load();
+
+      const handleCanPlay = () => {
+        if (loadTimeout) window.clearTimeout(loadTimeout);
+        video.play().catch(() => { });
+        setIsLoading(false);
+        setRetryCount(0);
+        updateStreamHealth('healthy');
+        video.removeEventListener('canplay', handleCanPlay);
       };
+
+      const handleError = () => {
+        if (loadTimeout) window.clearTimeout(loadTimeout);
+        updateStreamHealth('failed');
+        setIsLoading(false);
+        onNext();
+        video.removeEventListener('error', handleError);
+      };
+
+      video.addEventListener('canplay', handleCanPlay);
+      video.addEventListener('error', handleError);
     }
 
     return () => {
@@ -319,6 +349,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         playsInline
+        crossOrigin="anonymous"
       />
 
       {/* Top Header Overlay */}
