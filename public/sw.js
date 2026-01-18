@@ -1,14 +1,13 @@
-
-const CACHE_NAME = 'reet-tv-v2';
+const CACHE_NAME = 'reet-tv-v3';
 const ASSETS_TO_CACHE = [
     '/',
     '/index.html',
     '/manifest.json',
-    '/favicon.svg'
+    '/favicon.svg',
+    '/favicon.ico'
 ];
 
 self.addEventListener('install', (event) => {
-    // Force the waiting service worker to become the active service worker
     self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
@@ -18,7 +17,6 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-    // Delete old caches
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
@@ -30,22 +28,48 @@ self.addEventListener('activate', (event) => {
             );
         })
     );
-    // Take control of all pages immediately
     return self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-    // Only cache GET requests
     if (event.request.method !== 'GET') return;
 
-    // For M3U and video fragments, we don't want to use standard cache
-    if (event.request.url.includes('.m3u') || event.request.url.includes('.ts')) {
+    const url = new URL(event.request.url);
+
+    // Don't cache streams or fragments
+    if (url.pathname.endsWith('.m3u8') || url.pathname.endsWith('.ts') || url.pathname.includes('/play/')) {
         return;
     }
 
+    // Network-First for HTML and Manifest to avoid "hash mismatch" blank screens
+    if (event.request.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname.endsWith('manifest.json')) {
+        event.respondWith(
+            fetch(event.request)
+                .then((response) => {
+                    const clonedResponse = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, clonedResponse);
+                    });
+                    return response;
+                })
+                .catch(() => caches.match(event.request))
+        );
+        return;
+    }
+
+    // Cache-First for assets (JS, CSS, Images) as they have unique hashes or are static
     event.respondWith(
         caches.match(event.request).then((response) => {
-            return response || fetch(event.request);
+            return response || fetch(event.request).then((fetchResponse) => {
+                const clonedResponse = fetchResponse.clone();
+                // Only cache successful responses and static assets
+                if (fetchResponse.ok && (url.pathname.includes('/assets/') || url.pathname.includes('/public/'))) {
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, clonedResponse);
+                    });
+                }
+                return fetchResponse;
+            });
         })
     );
 });
