@@ -50,8 +50,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   onShowKeyboard
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const watchStartTime = useRef<number>(0);
+  const lastTapRef = useRef<number>(0);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -363,18 +365,50 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   };
 
   const toggleFullscreen = async () => {
-    const el = videoRef.current?.parentElement || document.documentElement;
-    if (isFullscreen) await document.exitFullscreen().catch(() => { });
-    else await el.requestFullscreen().catch(() => { });
+    const el = containerRef.current || document.documentElement;
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else {
+        if (el.requestFullscreen) {
+          await el.requestFullscreen();
+        } else if ((el as any).webkitRequestFullscreen) {
+          /* Safari/iOS fallback */
+          await (el as any).webkitRequestFullscreen();
+        } else if ((el as any).msRequestFullscreen) {
+          await (el as any).msRequestFullscreen();
+        }
+      }
+    } catch (err) {
+      console.warn('Fullscreen request failed:', err);
+      // Fallback: try video element directly if container fails
+      if (!document.fullscreenElement && videoRef.current?.requestFullscreen) {
+        videoRef.current.requestFullscreen().catch(() => { });
+      }
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300;
+    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
+      toggleFullscreen();
+      lastTapRef.current = 0; // Reset
+    } else {
+      lastTapRef.current = now;
+      resetControlsTimer();
+    }
   };
 
   if (!channel) return null;
 
   return (
     <div
+      ref={containerRef}
       className="flex-1 bg-black relative overflow-hidden flex flex-col group cursor-none selection:bg-transparent"
       onMouseMove={resetControlsTimer}
       onTouchStart={resetControlsTimer}
+      onTouchEnd={handleTouchEnd}
       style={{ cursor: showControls ? 'default' : 'none' }}
     >
       <video
@@ -627,8 +661,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                     {aspectRatio === 'contain' ? 'Original' : aspectRatio === 'cover' ? 'Zoom' : 'Stretch'}
                   </span>
                 </button>
-                <button onClick={toggleFullscreen} className="p-3 sm:p-4 glass rounded-xl sm:rounded-2xl text-white hover:bg-white/10 transition-all border-white/10">
-                  <Maximize size={18} className="sm:size-[20px]" />
+                <button onClick={toggleFullscreen} className="p-3 sm:p-4 glass rounded-xl sm:rounded-2xl text-white hover:bg-white/10 transition-all border-white/10" title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}>
+                  {isFullscreen ? <Minimize2 size={18} className="sm:size-[20px]" /> : <Maximize size={18} className="sm:size-[20px]" />}
                 </button>
               </div>
             </div>
