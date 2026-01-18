@@ -39,22 +39,25 @@ const VoiceSearch: React.FC<VoiceSearchProps> = ({ onSearchResult, isSupported }
     <div className="relative">
       <button
         onClick={isListening ? stopListening : handleVoiceSearch}
-        className={`p-2 rounded-lg transition-all ${
-          isListening 
-            ? 'bg-red-600 text-white animate-pulse' 
-            : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
-        }`}
-        title={isListening ? 'Stop listening' : 'Voice search'}
+        className={`p-3 rounded-2xl transition-all border-white/10 ${isListening
+            ? 'bg-red-500 text-white shadow-lg shadow-red-500/20'
+            : 'glass text-text-muted hover:text-white hover:bg-white/10'
+          }`}
+        title={isListening ? 'Stop listening' : 'Voice Search'}
       >
         {isListening ? (
-          <Loader2 size={18} className="animate-spin" />
+          <div className="flex items-center gap-2">
+            <div className="w-1 h-3 bg-white animate-bounce [animation-delay:-0.3s]" />
+            <div className="w-1 h-4 bg-white animate-bounce [animation-delay:-0.15s]" />
+            <div className="w-1 h-3 bg-white animate-bounce" />
+          </div>
         ) : (
-          <Mic size={18} />
+          <Mic size={20} />
         )}
       </button>
 
       {error && (
-        <div className="absolute top-full right-0 mt-2 p-2 bg-red-600 text-white text-xs rounded-lg whitespace-nowrap z-10">
+        <div className="absolute top-full right-0 mt-3 p-3 glass bg-red-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl whitespace-nowrap z-50 border-red-500/50 shadow-2xl">
           {error}
         </div>
       )}

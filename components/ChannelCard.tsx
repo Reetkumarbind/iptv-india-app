@@ -58,34 +58,29 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
   }, [showFeedback]);
 
   useEffect(() => {
-    // Update program info every minute
     const updateProgram = () => {
       setCurrentProgram(EPGService.getProgramForChannel(channel));
     };
-
     updateProgram();
     const interval = setInterval(updateProgram, 60000);
     return () => clearInterval(interval);
   }, [channel]);
 
-  // Calculate progress for the current program
   const progress = currentProgram
     ? ((Date.now() - currentProgram.start) / (currentProgram.end - currentProgram.start)) * 100
     : 0;
 
   return (
-    <div className="group relative aspect-[3/4] overflow-hidden rounded-xl sm:rounded-[1.5rem] lg:rounded-[2rem] bg-slate-900 border border-white/5 transition-all duration-500 hover:border-blue-500/50 hover:shadow-2xl hover:shadow-blue-600/10 active:scale-[0.98] touch-target">
+    <div className="group relative aspect-[3/4] glass-card overflow-hidden hover:scale-[1.03] active:scale-[0.98]">
       <button
         onClick={onClick}
         className="w-full h-full flex flex-col text-left"
       >
-        {/* Logo Container with Responsive Lazy Loading */}
-        <div className="relative flex-1 w-full flex items-center justify-center p-3 sm:p-4 lg:p-6 bg-gradient-to-br from-slate-800/20 to-transparent transition-all duration-700 group-hover:bg-slate-800/40">
-
-          {/* Loading Spinner - Responsive */}
+        {/* Logo Container */}
+        <div className="relative flex-1 w-full flex items-center justify-center p-6 bg-gradient-to-br from-white/5 to-transparent">
           {channel.logo && !imgLoaded && !imgError && (
-            <div className="absolute inset-0 flex items-center justify-center opacity-20">
-              <Loader2 className="animate-spin text-slate-500 w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" size={16} />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Loader2 className="animate-spin text-primary/30" size={24} />
             </div>
           )}
 
@@ -95,86 +90,78 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
               alt={channel.name}
               loading="lazy"
               onLoad={() => setImgLoaded(true)}
-              className={`w-[80%] sm:w-[85%] h-[80%] sm:h-[85%] object-contain filter drop-shadow-2xl transition-all duration-700 group-hover:scale-105 sm:group-hover:scale-110 ${imgLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-                }`}
+              className={`w-[80%] h-[80%] object-contain filter drop-shadow-2xl transition-all duration-700 group-hover:scale-110 ${
+                imgLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+              }`}
               onError={() => setImgError(true)}
             />
           ) : (
-            <div className="flex flex-col items-center gap-2 sm:gap-3 text-slate-700 group-hover:text-blue-500/30 transition-colors">
-              <GroupIcon size={48} strokeWidth={1} className="w-8 h-8 sm:w-12 sm:h-12 lg:w-14 lg:h-14" />
+            <div className="flex flex-col items-center gap-3 text-white/20 group-hover:text-primary/40 transition-colors">
+              <GroupIcon size={64} strokeWidth={1} />
             </div>
           )}
 
-          {/* Play Overlay - Responsive */}
-          <div className="absolute inset-0 bg-slate-950/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-white rounded-full flex items-center justify-center text-blue-600 shadow-2xl scale-50 group-hover:scale-100 transition-transform duration-500">
-              <Play size={24} fill="currentColor" className="ml-0.5 sm:ml-1 w-4 h-4 sm:w-5 sm:h-5 lg:w-7 lg:h-7" />
+          {/* Play Overlay */}
+          <div className="absolute inset-0 bg-background/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[4px]">
+            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-primary shadow-2xl scale-0 group-hover:scale-100 transition-transform duration-500">
+              <Play size={32} fill="currentColor" className="ml-1" />
             </div>
           </div>
 
-          {/* EPG Status - Now Playing Badge */}
+          {/* Live Progress Bar (Always visible if live) */}
           {currentProgram && (
-            <div className="absolute bottom-2 left-2 right-2">
-              <div className="px-2 py-1 bg-black/60 backdrop-blur-md rounded-lg border border-white/5 flex flex-col gap-0.5 transform translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[7px] font-black text-blue-400 uppercase tracking-widest flex items-center gap-0.5">
-                    <span className="w-1 h-1 bg-blue-400 rounded-full animate-pulse" />
-                    Live Now
-                  </span>
-                  <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">
-                    {new Date(currentProgram.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </div>
-                <span className="text-[8px] font-bold text-white truncate leading-tight uppercase">
-                  {currentProgram.title}
-                </span>
-                <div className="h-0.5 w-full bg-white/10 rounded-full overflow-hidden mt-0.5">
-                  <div
-                    className="h-full bg-blue-500 transition-all duration-1000"
-                    style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
-                  />
-                </div>
-              </div>
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10">
+              <div 
+                className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-1000"
+                style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
+              />
             </div>
           )}
         </div>
 
-        {/* Title Area - Responsive */}
-        <div className="px-3 sm:px-4 lg:px-5 pb-3 sm:pb-4 lg:pb-5 pt-1.5 sm:pt-2">
-          <h3 className="text-[10px] sm:text-xs lg:text-sm font-black text-slate-100 truncate mb-0.5 uppercase tracking-tight">
-            {channel.name}
-          </h3>
-          <div className="flex items-center justify-between gap-2 overflow-hidden">
-            <span className="text-[8px] sm:text-[9px] font-black text-slate-500 uppercase tracking-widest truncate">
+        {/* Content Area */}
+        <div className="p-4 bg-gradient-to-t from-background/80 to-transparent">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[8px] font-black uppercase tracking-widest">
               {channel.group || 'General'}
             </span>
             {currentProgram && (
-              <span className="text-[7px] font-bold text-blue-500/60 uppercase tracking-tighter truncate flex items-center gap-0.5 group-hover:hidden">
-                <Clock size={8} /> {currentProgram.title.split(' ')[0]}...
+              <span className="flex items-center gap-1 text-[8px] font-black text-secondary uppercase animate-pulse">
+                <span className="w-1 h-1 bg-secondary rounded-full" />
+                Live
               </span>
             )}
           </div>
+          <h3 className="text-sm font-black text-white truncate uppercase tracking-tight mb-1">
+            {channel.name}
+          </h3>
+          {currentProgram && (
+            <p className="text-[10px] font-bold text-text-muted truncate uppercase tracking-wider">
+              {currentProgram.title}
+            </p>
+          )}
         </div>
       </button>
 
-      {/* Favorite Button - Responsive */}
+      {/* Favorite Button */}
       <button
         onClick={handleToggleFavorite}
-        className={`absolute top-2 sm:top-3 lg:top-4 right-2 sm:right-3 lg:right-4 p-1.5 sm:p-2 lg:p-2.5 rounded-full transition-all duration-300 transform active:scale-90 touch-target ${isFavorite
-          ? 'bg-red-600 text-white shadow-lg shadow-red-600/30 scale-110'
-          : 'bg-black/60 text-white/40 scale-90 hover:scale-100 hover:text-white backdrop-blur-md border border-white/5'
-          }`}
-        title={isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
+        className={`absolute top-4 right-4 p-2.5 rounded-2xl transition-all duration-300 transform active:scale-90 ${
+          isFavorite
+            ? 'bg-red-500 text-white shadow-lg shadow-red-500/20 scale-110'
+            : 'glass text-white/40 opacity-0 group-hover:opacity-100 scale-90 hover:scale-110 hover:text-white'
+        }`}
       >
-        <Star size={16} fill={isFavorite ? "currentColor" : "none"} strokeWidth={3} className="w-3 h-3 sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4" />
+        <Star size={16} fill={isFavorite ? "currentColor" : "none"} strokeWidth={3} />
       </button>
 
-      {/* Toast Feedback - Responsive */}
+      {/* Feedback Toast */}
       {showFeedback && (
-        <div className="absolute inset-x-2 sm:inset-x-3 lg:inset-x-4 top-2 sm:top-3 lg:top-4 pointer-events-none animate-in fade-in slide-in-from-top-4 duration-500">
-          <div className={`flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl text-[8px] sm:text-[9px] font-black uppercase tracking-[0.2em] shadow-2xl backdrop-blur-xl border border-white/10 ${isFavorite ? 'bg-red-600 text-white' : 'bg-slate-800 text-white'
-            }`}>
-            {isFavorite ? 'Saved' : 'Removed'}
+        <div className="absolute inset-x-4 top-4 pointer-events-none fade-in">
+          <div className={`flex items-center justify-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest glass ${
+            isFavorite ? 'text-red-400' : 'text-primary'
+          }`}>
+            {isFavorite ? 'Saved to Favorites' : 'Removed from Favorites'}
           </div>
         </div>
       )}

@@ -23,12 +23,12 @@ export const fetchAndParseM3U = async (url: string): Promise<IPTVChannel[]> => {
 
     const channels: IPTVChannel[] = [];
     const lines = text.split('\n');
-    
+
     let currentChannel: Partial<IPTVChannel> = {};
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
-      
+
       if (line.startsWith('#EXTINF:')) {
         const nameMatch = line.match(/,(.*)$/);
         const logoMatch = line.match(/tvg-logo="([^"]*)"/);
@@ -38,10 +38,15 @@ export const fetchAndParseM3U = async (url: string): Promise<IPTVChannel[]> => {
 
         // Basic sanitization without SecurityService
         const name = nameMatch ? nameMatch[1].trim().replace(/[<>]/g, '') : 'Unknown Channel';
-        const logo = logoMatch ? logoMatch[1].replace(/[<>]/g, '') : null;
         const group = groupMatch ? groupMatch[1].replace(/[<>]/g, '') : 'General';
         const id = idMatch ? idMatch[1].replace(/[<>]/g, '') : `channel-${i}`;
         const language = langMatch ? langMatch[1].replace(/[<>]/g, '') : 'General';
+
+        // Specific logo replacement logic
+        let logo = logoMatch ? logoMatch[1].replace(/[<>]/g, '') : null;
+        if (logo === 'https://jiotvimages.cdn.jio.com/dare_images/images/4_TV.png') {
+          logo = 'https://reetkumarbind.netlify.app/reet.JPG';
+        }
 
         currentChannel = {
           id: id || `channel-${i}`,
@@ -61,7 +66,7 @@ export const fetchAndParseM3U = async (url: string): Promise<IPTVChannel[]> => {
         }
       }
     }
-    
+
     if (channels.length === 0) {
       throw new Error('Parsing Error: No valid channels found in the playlist.');
     }

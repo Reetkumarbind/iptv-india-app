@@ -82,9 +82,18 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     );
 
     const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
+    const handleGlobalInteraction = () => resetControlsTimer();
+
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, []);
+    document.addEventListener('keydown', handleGlobalInteraction);
+    document.addEventListener('touchstart', handleGlobalInteraction);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('keydown', handleGlobalInteraction);
+      document.removeEventListener('touchstart', handleGlobalInteraction);
+    };
+  }, [isPlaying]);
 
   useEffect(() => {
     if (!channel) return;
@@ -127,7 +136,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     if (controlsTimerRef.current) window.clearTimeout(controlsTimerRef.current);
     controlsTimerRef.current = window.setTimeout(() => {
       if (isPlaying) setShowControls(false);
-    }, 4000);
+    }, 3000);
   };
 
   useEffect(() => {
@@ -155,8 +164,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }, 20000);
 
     if (Hls.isSupported()) {
-      hls = new Hls({ 
-        enableWorker: true, 
+      hls = new Hls({
+        enableWorker: true,
         lowLatencyMode: false,
         maxLoadingDelay: 8,
         maxBufferLength: 30,
@@ -170,7 +179,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         fragLoadingRetryDelay: 1000
       });
       hlsRef.current = hls;
-      
+
       hls.loadSource(channel.url);
       hls.attachMedia(video);
 
@@ -188,11 +197,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
       hls.on(Hls.Events.ERROR, (event, data) => {
         console.error('HLS Error:', data.type, data.details, data.fatal);
-        
+
         if (data.fatal) {
           if (loadTimeout) window.clearTimeout(loadTimeout);
           updateStreamHealth('failed');
-          
+
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
               console.error('Network error - attempting recovery');
@@ -297,7 +306,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   return (
     <div
-      className="flex-1 bg-black relative overflow-hidden flex flex-col group"
+      className="flex-1 bg-black relative overflow-hidden flex flex-col group cursor-none selection:bg-transparent"
       onMouseMove={resetControlsTimer}
       onTouchStart={resetControlsTimer}
       style={{ cursor: showControls ? 'default' : 'none' }}
@@ -313,68 +322,72 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       />
 
       {/* Top Header Overlay */}
-      <div className={`absolute top-0 inset-x-0 p-4 sm:p-6 lg:p-8 bg-gradient-to-b from-black/95 via-black/40 to-transparent transition-opacity duration-500 z-50 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 sm:gap-4 overflow-hidden">
+      <div className={`absolute top-0 inset-x-0 p-4 sm:p-8 pt-6 sm:pt-10 bg-gradient-to-b from-black/80 via-black/20 to-transparent transition-all duration-500 z-50 ${showControls ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'}`}>
+        <div className="max-w-[1920px] mx-auto flex items-center justify-between gap-2 sm:gap-8">
+          <div className="flex items-center gap-3 sm:gap-6 overflow-hidden min-w-0">
             <button
               onClick={onExit}
-              className="flex items-center justify-center p-2.5 sm:p-3 bg-white/10 hover:bg-white/20 rounded-xl sm:rounded-2xl transition-all border border-white/10 active:scale-95 group flex-shrink-0 backdrop-blur-xl"
-              title="Exit to Gallery"
+              className="p-2.5 sm:p-4 glass rounded-xl sm:rounded-2xl hover:bg-white/10 transition-all group border-white/10 flex-shrink-0"
             >
-              <ChevronLeft size={20} className="text-white group-hover:-translate-x-0.5 transition-transform" />
+              <ChevronLeft size={20} className="text-white group-hover:-translate-x-1 transition-transform sm:size-[24px]" />
             </button>
 
-            <div className="h-8 sm:h-10 w-[1px] bg-white/10 hidden sm:block" />
-
-            {channel.logo && (
-              <img src={channel.logo} className="w-8 h-8 sm:w-10 sm:h-10 object-contain rounded-xl bg-white/10 p-1 flex-shrink-0" alt="" />
-            )}
-            <div className="overflow-hidden">
-              <h3 className="text-sm sm:text-base lg:text-lg font-black text-white uppercase tracking-tight leading-tight truncate">
-                {channel.name}
-              </h3>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-[8px] sm:text-[10px] font-bold text-blue-400 uppercase tracking-widest truncate">{channel.group}</span>
-                {streamHealth && (
-                  <div className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full ${streamHealth.status === 'healthy' ? 'bg-green-500' : 'bg-red-500'}`} />
-                )}
+            <div className="flex items-center gap-2 sm:gap-4 overflow-hidden">
+              {channel.logo && (
+                <div className="w-10 h-10 sm:w-14 sm:h-14 glass rounded-lg sm:rounded-2xl p-1 sm:p-2 flex items-center justify-center border-white/10 flex-shrink-0">
+                  <img src={channel.logo} className="w-full h-full object-contain filter drop-shadow-lg" alt="" />
+                </div>
+              )}
+              <div className="overflow-hidden">
+                <div className="flex items-center gap-2 sm:gap-3 mb-0.5 sm:mb-1">
+                  <span className="px-1.5 py-0.5 rounded-md bg-primary text-white text-[8px] sm:text-[10px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em] shadow-lg shadow-primary/20 animate-pulse flex-shrink-0">Live</span>
+                  <h3 className="text-sm sm:text-xl font-black text-white uppercase tracking-tighter truncate leading-none">
+                    {channel.name}
+                  </h3>
+                </div>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <span className="text-[8px] sm:text-[10px] font-black text-text-muted uppercase tracking-[0.1em] sm:tracking-[0.3em] truncate">{channel.group}</span>
+                  {streamHealth && (
+                    <div className="hidden xs:flex items-center gap-1.5 sm:gap-2">
+                      <div className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full ${streamHealth.status === 'healthy' ? 'bg-green-500' : 'bg-red-500 shadow-[0_0_8px_red]'}`} />
+                      <span className="text-[8px] sm:text-[10px] font-bold text-text-muted/60 uppercase lg:inline">{streamHealth.status}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
-            {onShowKeyboard && (
-              <button onClick={onShowKeyboard} className="p-2 sm:p-3 bg-white/10 hover:bg-white/20 rounded-full transition-all backdrop-blur-md border border-white/5 text-white hidden sm:flex" title="Keyboard Shortcuts">
-                <KeyboardIcon size={18} />
-              </button>
-            )}
+          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
             {onMinimize && (
-              <button onClick={onMinimize} className="p-2 sm:p-3 bg-white/10 hover:bg-white/20 rounded-full transition-all backdrop-blur-md border border-white/5 text-white" title="Minimize">
-                <Minimize2 size={18} />
+              <button onClick={onMinimize} className="p-2.5 sm:p-4 glass rounded-xl sm:rounded-2xl hover:bg-white/10 transition-all border-white/10 text-white">
+                <Minimize2 size={18} className="sm:size-[20px]" />
               </button>
             )}
-            <button onClick={() => setShowSettings(!showSettings)} className={`p-2 sm:p-3 rounded-full transition-all backdrop-blur-md border border-white/5 ${showSettings ? 'bg-blue-600 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`} title="Settings">
-              <Settings size={18} />
+            <button onClick={() => setShowSettings(!showSettings)} className={`p-2.5 sm:p-4 glass rounded-xl sm:rounded-2xl transition-all border-white/10 ${showSettings ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-white hover:bg-white/10'}`}>
+              <Settings size={18} className="sm:size-[20px]" />
             </button>
-            <button onClick={onToggleFavorite} className={`p-2 sm:p-3 rounded-full transition-all ${isFavorite ? 'bg-amber-400 text-slate-950 shadow-lg shadow-amber-400/20' : 'bg-white/10 text-white backdrop-blur-md border border-white/5'}`} title="Favorite">
-              <Star size={18} fill={isFavorite ? "currentColor" : "none"} strokeWidth={3} />
+            <button onClick={onToggleFavorite} className={`p-2.5 sm:p-4 glass rounded-xl sm:rounded-2xl transition-all border-white/10 ${isFavorite ? 'bg-red-500 text-white shadow-lg shadow-red-500/20' : 'text-white hover:bg-white/10'}`}>
+              <Star size={18} fill={isFavorite ? "currentColor" : "none"} strokeWidth={3} className="sm:size-[20px]" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Settings Modal */}
+      {/* Settings Modal - Repositioned and Redesigned */}
       {showSettings && (
-        <div className="absolute top-24 right-8 bg-slate-900/95 backdrop-blur-2xl rounded-2xl border border-white/10 p-6 z-[60] min-w-[280px] shadow-2xl animate-in fade-in slide-in-from-top-2 duration-300">
-          <div className="space-y-6">
+        <div className="absolute top-32 right-8 glass p-8 rounded-[2.5rem] z-[60] min-w-[320px] shadow-2xl border-white/10 animate-in fade-in zoom-in-95">
+          <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mb-6 flex items-center gap-2">
+            <Settings size={14} /> Playback Engine
+          </h4>
+
+          <div className="space-y-8">
             <div>
-              <label className="flex items-center gap-2 text-[10px] font-black text-blue-400 uppercase tracking-widest mb-3">
-                <Gauge size={14} /> Playback Speed
-              </label>
+              <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-4 block">Engine Speed</label>
               <div className="grid grid-cols-3 gap-2">
                 {PLAYBACK_RATES.map(rate => (
-                  <button key={rate} onClick={() => changePlaybackRate(rate)} className={`py-2 text-xs font-bold rounded-lg transition-all ${playbackRate === rate ? 'bg-blue-600 text-white' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}>
-                    {rate}x
+                  <button key={rate} onClick={() => changePlaybackRate(rate)} className={`py-3 text-[10px] font-black rounded-xl transition-all ${playbackRate === rate ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-white/5 text-text-muted hover:bg-white/10 hover:text-white'}`}>
+                    {rate}X
                   </button>
                 ))}
               </div>
@@ -382,108 +395,112 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
             {availableQualities.length > 1 && (
               <div>
-                <label className="flex items-center gap-2 text-[10px] font-black text-blue-400 uppercase tracking-widest mb-3">
-                  <Monitor size={14} /> Quality
-                </label>
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-4 block">Stream Resolution</label>
                 <div className="grid grid-cols-2 gap-2">
                   {availableQualities.map(q => (
-                    <button key={q} onClick={() => changeQuality(q)} className={`py-2 text-xs font-bold rounded-lg transition-all ${selectedQuality === q ? 'bg-blue-600 text-white' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}>
-                      {q === 'auto' ? 'Auto' : q}
+                    <button key={q} onClick={() => changeQuality(q)} className={`py-3 text-[10px] font-black rounded-xl transition-all ${selectedQuality === q ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-white/5 text-text-muted hover:bg-white/10 hover:text-white'}`}>
+                      {q === 'auto' ? 'AUTO-DETECTION' : q.toUpperCase()}
                     </button>
                   ))}
                 </div>
               </div>
             )}
 
-            <div className="pt-4 border-t border-white/5">
-              <div className="flex justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                <span>Bandwidth</span>
-                <span className="text-slate-300">{(bandwidthUsage / (1024 * 1024)).toFixed(1)} MB</span>
+            <div className="pt-6 border-t border-white/5">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <Gauge size={14} className="text-secondary" />
+                  <span className="text-[10px] font-black text-text-muted uppercase tracking-widest">Cache Usage</span>
+                </div>
+                <span className="text-[10px] font-black text-white">{(bandwidthUsage / (1024 * 1024)).toFixed(1)} MB</span>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Retry indicator - only shown briefly */}
-      {error && error.includes('retrying') && (
-        <div className="absolute top-24 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-xl rounded-2xl px-6 py-3 z-[70] border border-white/10 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-300">
-          <div className="flex items-center gap-3">
-            <Loader2 size={16} className="animate-spin text-blue-500" />
-            <span className="text-sm font-bold text-white">Retrying connection...</span>
-          </div>
-        </div>
-      )}
-
+      {/* Center UI Overlay */}
       {isLoading && !error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-20">
-          <Loader2 size={48} className="animate-spin text-blue-500" />
+        <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-[12px] z-20">
+          <div className="relative transform scale-75 sm:scale-100">
+            <div className="w-24 h-24 border-2 border-primary/20 rounded-full animate-ping absolute inset-0" />
+            <div className="w-24 h-24 border-t-2 border-primary rounded-full animate-spin relative flex items-center justify-center">
+              <Tv size={32} className="text-white animate-pulse" />
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Bottom Controls */}
-      <div className={`absolute inset-x-0 bottom-0 p-6 lg:p-8 bg-gradient-to-t from-black via-black/80 to-transparent transition-all duration-700 transform ${showControls ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0 pointer-events-none'}`}>
-        <div className="max-w-5xl mx-auto flex flex-col gap-6">
+      <div className={`absolute inset-x-0 bottom-0 p-4 sm:p-8 lg:p-12 bg-gradient-to-t from-black via-black/40 to-transparent transition-all duration-700 transform ${showControls ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0 pointer-events-none'}`}>
+        <div className="max-w-[1280px] mx-auto">
+          {/* Main Controls Overlay - Centered Layout */}
+          <div className="flex flex-col items-center justify-center gap-6 sm:gap-8 md:gap-12">
 
-          {currentProgram && (
-            <div className="flex flex-col gap-3 bg-white/5 backdrop-blur-xl rounded-2xl p-5 border border-white/10">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="px-1.5 py-0.5 bg-blue-600 rounded text-[8px] font-black uppercase tracking-widest text-white">Live</span>
-                    <h4 className="text-sm font-black text-white uppercase truncate tracking-tight">{currentProgram.title}</h4>
-                  </div>
-                  <p className="text-xs text-slate-400 line-clamp-1">{currentProgram.description}</p>
-                </div>
-
-                <div className="hidden md:flex flex-col items-end text-right gap-0.5">
-                  {nextChannelName ? (
-                    <>
-                      <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest mb-0.5">Next Channel</span>
-                      <span className="text-sm font-black text-white truncate max-w-[180px] uppercase tracking-tighter leading-none">{nextChannelName}</span>
-                      {nextProgram && (
-                        <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-1 opacity-60">Upcoming: {nextProgram.title}</span>
-                      )}
-                    </>
-                  ) : nextProgram && (
-                    <>
-                      <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Next Show</span>
-                      <span className="text-xs font-bold text-slate-300 truncate max-w-[150px] uppercase tracking-tighter">{nextProgram.title}</span>
-                    </>
-                  )}
-                </div>
-              </div>
-              <div className="relative h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                <div className="absolute inset-y-0 left-0 bg-blue-600 transition-all duration-1000 shadow-[0_0_10px_rgba(37,99,235,0.5)]" style={{ width: `${Math.min(100, progress)}%` }} />
-                <div className="absolute inset-0 flex items-center justify-between px-3 text-[7px] font-black text-white/20 uppercase tracking-[0.2em]">
-                  <span>{new Date(currentProgram.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                  <span>{new Date(currentProgram.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-8">
-              <button onClick={onPrevious} className="text-white/60 hover:text-white transition active:scale-90"><SkipBack size={24} fill="currentColor" /></button>
-              <button onClick={togglePlay} className="w-16 h-16 bg-white text-slate-950 rounded-full flex items-center justify-center shadow-2xl active:scale-90 transition transform">
-                {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" className="ml-1" />}
+            {/* Playback Controls */}
+            <div className="flex items-center gap-8 sm:gap-12 md:gap-16">
+              <button onClick={onPrevious} className="text-white/40 hover:text-white transition-all transform hover:scale-125 active:scale-90">
+                <SkipBack size={24} fill="currentColor" className="sm:size-[28px] md:size-[32px]" />
               </button>
-              <button onClick={onNext} className="text-white/60 hover:text-white transition active:scale-90"><SkipForward size={24} fill="currentColor" /></button>
+
+              <button onClick={togglePlay} className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-white text-black rounded-full flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all transform group">
+                {isPlaying ? <Pause size={28} fill="currentColor" className="sm:size-[32px] md:size-[38px]" /> : <Play size={28} fill="currentColor" className="ml-1 sm:ml-2 sm:size-[32px] md:size-[38px]" />}
+              </button>
+
+              <button onClick={onNext} className="text-white/40 hover:text-white transition-all transform hover:scale-125 active:scale-90">
+                <SkipForward size={24} fill="currentColor" className="sm:size-[28px] md:size-[32px]" />
+              </button>
             </div>
 
-            <div className="flex items-center gap-6">
-              <div className="hidden sm:flex items-center gap-4 bg-white/5 p-2 rounded-2xl border border-white/5">
-                <button onClick={() => { if (videoRef.current) { videoRef.current.muted = !isMuted; setIsMuted(!isMuted); } }} className="text-white/60 hover:text-white">
-                  {isMuted || volume === 0 ? <VolumeX size={18} /> : <Volume2 size={18} />}
+            {/* Bottom Group: Volume & Options */}
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8">
+              <div className="flex items-center gap-3 sm:gap-6 glass px-4 sm:px-6 py-2.5 sm:py-4 rounded-full sm:rounded-[2rem] border-white/10 group/volume">
+                <button
+                  onClick={() => { if (videoRef.current) { const newMuted = !isMuted; videoRef.current.muted = newMuted; setIsMuted(newMuted); } }}
+                  className="text-white/60 hover:text-primary transition-colors"
+                >
+                  {isMuted || volume === 0 ? <VolumeX size={18} className="sm:size-[20px]" /> : <Volume2 size={18} className="sm:size-[20px]" />}
                 </button>
-                <input type="range" min="0" max="1" step="0.05" value={volume} onChange={(e: any) => { const v = parseFloat(e.target.value); setVolume(v); if (videoRef.current) videoRef.current.volume = v; }} className="w-24 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-blue-500" />
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={volume}
+                  onChange={(e: any) => {
+                    const v = parseFloat(e.target.value);
+                    setVolume(v);
+                    if (videoRef.current) {
+                      videoRef.current.volume = v;
+                      videoRef.current.muted = v === 0;
+                      setIsMuted(v === 0);
+                    }
+                  }}
+                  className="w-20 sm:w-32"
+                />
               </div>
-              <div className="flex gap-4">
+
+              <div className="flex gap-2 sm:gap-3">
                 {isPiPSupported && (
-                  <button onClick={async () => { if (videoRef.current) (document.pictureInPictureElement) ? await document.exitPictureInPicture() : await videoRef.current.requestPictureInPicture(); }} className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl text-white transition"><PictureInPicture2 size={16} /></button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        if (videoRef.current) {
+                          (document.pictureInPictureElement)
+                            ? await document.exitPictureInPicture()
+                            : await videoRef.current.requestPictureInPicture();
+                        }
+                      } catch (e) {
+                        console.error("PiP error", e);
+                      }
+                    }}
+                    className="p-3 sm:p-4 glass rounded-xl sm:rounded-2xl text-white hover:bg-white/10 transition-all border-white/10"
+                  >
+                    <PictureInPicture2 size={18} className="sm:size-[20px]" />
+                  </button>
                 )}
-                <button onClick={toggleFullscreen} className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl text-white transition"><Maximize size={16} /></button>
+                <button onClick={toggleFullscreen} className="p-3 sm:p-4 glass rounded-xl sm:rounded-2xl text-white hover:bg-white/10 transition-all border-white/10">
+                  <Maximize size={18} className="sm:size-[20px]" />
+                </button>
               </div>
             </div>
           </div>

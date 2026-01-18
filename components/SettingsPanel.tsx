@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { UserPreferences } from '../types';
 import { StorageService } from '../services/storageService';
-import { 
-  Settings, 
-  X, 
-  Moon, 
-  Sun, 
-  Play, 
-  Keyboard, 
+import {
+  Settings,
+  X,
+  Moon,
+  Sun,
+  Play,
+  Keyboard,
   Activity,
   Download,
   Upload,
@@ -21,11 +21,11 @@ interface SettingsPanelProps {
   onPreferencesChange: (preferences: UserPreferences) => void;
 }
 
-const SettingsPanel: React.FC<SettingsPanelProps> = ({ 
-  isOpen, 
-  onClose, 
-  preferences, 
-  onPreferencesChange 
+const SettingsPanel: React.FC<SettingsPanelProps> = ({
+  isOpen,
+  onClose,
+  preferences,
+  onPreferencesChange
 }) => {
   const [exportSuccess, setExportSuccess] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
@@ -66,7 +66,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         const success = StorageService.importData(content);
         if (success) {
           setImportError(null);
-          window.location.reload(); // Refresh to apply imported data
+          window.location.reload();
         } else {
           setImportError('Invalid backup file format');
         }
@@ -75,7 +75,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
       }
     };
     reader.readAsText(file);
-    event.target.value = ''; // Reset input
+    event.target.value = '';
   };
 
   const resetAllData = () => {
@@ -88,165 +88,165 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-      <div className="bg-slate-900 rounded-2xl border border-white/10 w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-background/40 backdrop-blur-[12px] z-[200] flex items-center justify-center p-4 animate-in fade-in duration-300">
+      <div className="glass bg-[#020617] rounded-[3rem] border-white/10 w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-white/10">
-          <div className="flex items-center gap-3">
-            <Settings className="text-blue-500" size={20} />
-            <h2 className="text-lg font-black text-white uppercase tracking-tight">Settings</h2>
+        <div className="flex items-center justify-between p-8 border-b border-white/5">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-primary/20 rounded-2xl flex items-center justify-center text-primary">
+              <Settings size={22} />
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-white uppercase tracking-tighter">System Console</h2>
+              <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em]">CONFIGURE PERSONAL SESSION</p>
+            </div>
           </div>
-          <button 
+          <button
             onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            className="p-3 glass rounded-2xl hover:bg-white/10 transition-colors border-white/10 text-white"
           >
-            <X className="text-white" size={20} />
+            <X size={20} />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
-          {/* Theme */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-              {preferences.theme === 'dark' ? <Moon size={16} /> : <Sun size={16} />}
-              Theme
-            </h3>
-            <div className="flex gap-2">
+        <div className="p-8 space-y-10 overflow-y-auto scrollbar-hide">
+          {/* Theme Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Aesthetics</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <button
                 onClick={() => handlePreferenceChange('theme', 'dark')}
-                className={`flex-1 p-3 rounded-xl border transition-all ${
-                  preferences.theme === 'dark' 
-                    ? 'bg-blue-600 border-blue-600 text-white' 
-                    : 'bg-slate-800 border-white/10 text-slate-400 hover:border-white/20'
-                }`}
+                className={`flex items-center gap-4 p-4 rounded-3xl transition-all ${preferences.theme === 'dark'
+                    ? 'bg-primary text-white shadow-xl shadow-primary/20'
+                    : 'glass text-text-muted hover:text-white border-white/5'
+                  }`}
               >
-                <Moon size={16} className="mx-auto mb-1" />
-                <div className="text-xs font-bold">Dark</div>
+                <Moon size={18} />
+                <span className="text-[10px] font-black uppercase tracking-widest">Midnight</span>
               </button>
               <button
                 onClick={() => handlePreferenceChange('theme', 'light')}
-                className={`flex-1 p-3 rounded-xl border transition-all ${
-                  preferences.theme === 'light' 
-                    ? 'bg-blue-600 border-blue-600 text-white' 
-                    : 'bg-slate-800 border-white/10 text-slate-400 hover:border-white/20'
-                }`}
+                className={`flex items-center gap-4 p-4 rounded-3xl transition-all ${preferences.theme === 'light'
+                    ? 'bg-primary text-white shadow-xl shadow-primary/20'
+                    : 'glass text-text-muted hover:text-white border-white/5'
+                  }`}
               >
-                <Sun size={16} className="mx-auto mb-1" />
-                <div className="text-xs font-bold">Light</div>
+                <Sun size={18} />
+                <span className="text-[10px] font-black uppercase tracking-widest">Daylight</span>
               </button>
             </div>
           </div>
 
-          {/* Playback */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-              <Play size={16} />
-              Playback
-            </h3>
-            <div className="space-y-3">
-              <label className="flex items-center justify-between">
-                <span className="text-sm text-slate-300">Auto-play channels</span>
+          {/* Engine Section */}
+          <div className="space-y-6">
+            <h3 className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Stream Engine</h3>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 glass rounded-3xl border-white/5">
+                <div>
+                  <div className="text-[10px] font-black text-white uppercase tracking-widest mb-1">Auto-Initialization</div>
+                  <div className="text-[9px] font-medium text-text-muted uppercase">START PLAYBACK IMMEDIATELY</div>
+                </div>
                 <input
                   type="checkbox"
                   checked={preferences.autoPlay}
                   onChange={(e) => handlePreferenceChange('autoPlay', e.target.checked)}
-                  className="w-4 h-4 text-blue-600 bg-slate-800 border-slate-600 rounded focus:ring-blue-500"
+                  className="w-5 h-5 rounded-lg border-white/20 bg-white/5 text-primary focus:ring-primary"
                 />
-              </label>
-              <div>
-                <label className="block text-sm text-slate-300 mb-2">Default Quality</label>
-                <select
-                  value={preferences.defaultQuality}
-                  onChange={(e) => handlePreferenceChange('defaultQuality', e.target.value)}
-                  className="w-full p-2 bg-slate-800 border border-white/10 rounded-lg text-white text-sm"
-                >
-                  <option value="auto">Auto</option>
-                  <option value="1080p">1080p</option>
-                  <option value="720p">720p</option>
-                  <option value="480p">480p</option>
-                </select>
+              </div>
+
+              <div className="flex flex-col gap-4 p-4 glass rounded-3xl border-white/5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-[10px] font-black text-white uppercase tracking-widest mb-1">Target Resolution</div>
+                    <div className="text-[9px] font-medium text-text-muted uppercase">OPTIMIZE FOR YOUR CONNECTION</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {['auto', '1080p', '720p', '480p'].map(q => (
+                    <button
+                      key={q}
+                      onClick={() => handlePreferenceChange('defaultQuality', q)}
+                      className={`py-2 text-[10px] font-black rounded-xl transition-all ${preferences.defaultQuality === q
+                          ? 'bg-primary text-white shadow-lg'
+                          : 'bg-white/5 text-text-muted hover:text-white'
+                        }`}
+                    >
+                      {q.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Controls */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-              <Keyboard size={16} />
-              Controls
-            </h3>
-            <label className="flex items-center justify-between">
-              <span className="text-sm text-slate-300">Keyboard shortcuts</span>
-              <input
-                type="checkbox"
-                checked={preferences.keyboardShortcuts}
-                onChange={(e) => handlePreferenceChange('keyboardShortcuts', e.target.checked)}
-                className="w-4 h-4 text-blue-600 bg-slate-800 border-slate-600 rounded focus:ring-blue-500"
-              />
-            </label>
-          </div>
-
-          {/* Analytics */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-              <Activity size={16} />
-              Analytics
-            </h3>
-            <label className="flex items-center justify-between">
-              <span className="text-sm text-slate-300">Show bandwidth usage</span>
-              <input
-                type="checkbox"
-                checked={preferences.showBandwidthUsage}
-                onChange={(e) => handlePreferenceChange('showBandwidthUsage', e.target.checked)}
-                className="w-4 h-4 text-blue-600 bg-slate-800 border-slate-600 rounded focus:ring-blue-500"
-              />
-            </label>
-          </div>
-
-          {/* Data Management */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-black text-white uppercase tracking-wider">Data Management</h3>
-            <div className="space-y-2">
-              <button
-                onClick={handleExport}
-                className="w-full flex items-center justify-center gap-2 p-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm font-bold transition-colors"
-              >
-                <Download size={16} />
-                Export Backup
-              </button>
-              
-              <label className="w-full flex items-center justify-center gap-2 p-3 bg-green-600 hover:bg-green-700 rounded-lg text-white text-sm font-bold transition-colors cursor-pointer">
-                <Upload size={16} />
-                Import Backup
+          {/* Core Settings Section */}
+          <div className="space-y-4">
+            <h3 className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Interactions</h3>
+            <div className="space-y-3">
+              <label className="flex items-center justify-between p-4 glass rounded-3xl border-white/5">
+                <div className="flex items-center gap-3">
+                  <Keyboard size={18} className="text-secondary" />
+                  <span className="text-[10px] font-black text-white uppercase tracking-widest">Shortcuts</span>
+                </div>
                 <input
-                  type="file"
-                  accept=".json"
-                  onChange={handleImport}
-                  className="hidden"
+                  type="checkbox"
+                  checked={preferences.keyboardShortcuts}
+                  onChange={(e) => handlePreferenceChange('keyboardShortcuts', e.target.checked)}
+                  className="w-5 h-5 rounded-lg border-white/20 bg-white/5 text-primary focus:ring-primary"
                 />
               </label>
-
-              <button
-                onClick={resetAllData}
-                className="w-full flex items-center justify-center gap-2 p-3 bg-red-600 hover:bg-red-700 rounded-lg text-white text-sm font-bold transition-colors"
-              >
-                <RotateCcw size={16} />
-                Reset All Data
-              </button>
+              <label className="flex items-center justify-between p-4 glass rounded-3xl border-white/5">
+                <div className="flex items-center gap-3">
+                  <Activity size={18} className="text-accent" />
+                  <span className="text-[10px] font-black text-white uppercase tracking-widest">Bandwidth Telemetry</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={preferences.showBandwidthUsage}
+                  onChange={(e) => handlePreferenceChange('showBandwidthUsage', e.target.checked)}
+                  className="w-5 h-5 rounded-lg border-white/20 bg-white/5 text-primary focus:ring-primary"
+                />
+              </label>
             </div>
           </div>
 
-          {/* Status Messages */}
-          {exportSuccess && (
-            <div className="p-3 bg-green-600/20 border border-green-600/30 rounded-lg text-green-400 text-sm text-center">
-              Backup exported successfully!
+          {/* Data Section */}
+          <div className="space-y-4 pt-4">
+            <h3 className="text-[10px] font-black text-red-500 uppercase tracking-[0.3em]">Data Management</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={handleExport}
+                className="flex items-center justify-center gap-3 p-4 glass rounded-3xl border-white/5 text-white hover:bg-white/5 transition-all"
+              >
+                <Download size={18} className="text-blue-500" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Export</span>
+              </button>
+
+              <label className="flex items-center justify-center gap-3 p-4 glass rounded-3xl border-white/5 text-white hover:bg-white/5 transition-all cursor-pointer">
+                <Upload size={18} className="text-green-500" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Import</span>
+                <input type="file" accept=".json" onChange={handleImport} className="hidden" />
+              </label>
             </div>
-          )}
-          
-          {importError && (
-            <div className="p-3 bg-red-600/20 border border-red-600/30 rounded-lg text-red-400 text-sm text-center">
-              {importError}
+
+            <button
+              onClick={resetAllData}
+              className="w-full flex items-center justify-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-3xl text-red-500 hover:bg-red-500 hover:text-white transition-all group"
+            >
+              <RotateCcw size={18} className="group-hover:rotate-180 transition-transform duration-500" />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em]">Purge All Data</span>
+            </button>
+          </div>
+
+          {/* Feedback */}
+          {(exportSuccess || importError) && (
+            <div className={`p-4 rounded-3xl text-center text-[10px] font-black uppercase tracking-widest animate-in fade-in slide-in-from-bottom-2 ${exportSuccess ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
+              }`}>
+              {exportSuccess ? 'BACKUP SEQUENCE COMPLETE' : importError?.toUpperCase()}
             </div>
           )}
         </div>

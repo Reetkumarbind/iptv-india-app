@@ -34,7 +34,12 @@ const MiniPlayer: React.FC<MiniPlayerProps> = ({
     let hls: Hls | null = null;
 
     if (Hls.isSupported()) {
-      hls = new Hls({ enableWorker: true, lowLatencyMode: true });
+      hls = new Hls({
+        enableWorker: true,
+        lowLatencyMode: true,
+        maxBufferLength: 5,
+        maxMaxBufferLength: 10
+      });
       hls.loadSource(channel.url);
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
@@ -43,7 +48,7 @@ const MiniPlayer: React.FC<MiniPlayerProps> = ({
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = channel.url;
       video.addEventListener('loadedmetadata', () => {
-        video.play().catch(() => {});
+        video.play().catch(() => { });
       });
     }
 
@@ -54,7 +59,7 @@ const MiniPlayer: React.FC<MiniPlayerProps> = ({
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!containerRef.current) return;
-    
+
     setIsDragging(true);
     const rect = containerRef.current.getBoundingClientRect();
     setDragOffset({
@@ -65,17 +70,16 @@ const MiniPlayer: React.FC<MiniPlayerProps> = ({
 
   const handleMouseMove = (e: MouseEvent) => {
     if (!isDragging) return;
-    
+
     const newX = e.clientX - dragOffset.x;
     const newY = e.clientY - dragOffset.y;
-    
-    // Keep within viewport bounds
+
     const maxX = window.innerWidth - 320;
     const maxY = window.innerHeight - 180;
-    
+
     onPositionChange({
-      x: Math.max(0, Math.min(newX, maxX)),
-      y: Math.max(0, Math.min(newY, maxY))
+      x: Math.max(10, Math.min(newX, maxX - 10)),
+      y: Math.max(10, Math.min(newY, maxY - 10))
     });
   };
 
@@ -96,11 +100,8 @@ const MiniPlayer: React.FC<MiniPlayerProps> = ({
 
   const togglePlay = () => {
     if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play().catch(() => {});
-      }
+      if (isPlaying) videoRef.current.pause();
+      else videoRef.current.play().catch(() => { });
       setIsPlaying(!isPlaying);
     }
   };
@@ -117,40 +118,40 @@ const MiniPlayer: React.FC<MiniPlayerProps> = ({
   return (
     <div
       ref={containerRef}
-      className="fixed z-[150] w-80 bg-slate-900 rounded-lg border border-white/20 shadow-2xl overflow-hidden"
+      className={`fixed z-[150] w-80 glass bg-[#020617]/90 rounded-[2rem] border-white/10 shadow-2xl overflow-hidden transition-shadow duration-300 ${isDragging ? 'shadow-primary/20 scale-[1.02]' : ''}`}
       style={{ left: position.x, top: position.y }}
     >
       {/* Header */}
       <div
-        className="flex items-center justify-between p-3 bg-slate-800 cursor-move"
+        className="flex items-center justify-between p-4 bg-white/5 cursor-grab active:cursor-grabbing border-b border-white/5"
         onMouseDown={handleMouseDown}
       >
-        <div className="flex items-center gap-2 flex-1 min-w-0">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
           {channel.logo && (
-            <img src={channel.logo} alt="" className="w-5 h-5 object-contain" />
+            <img src={channel.logo} alt="" className="w-5 h-5 object-contain rounded-md" />
           )}
-          <span className="text-sm font-bold text-white truncate">{channel.name}</span>
+          <span className="text-[10px] font-black text-white uppercase tracking-tighter truncate">{channel.name}</span>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           <button
             onClick={onMaximize}
-            className="p-1.5 hover:bg-white/10 rounded transition-colors"
+            className="p-1.5 glass rounded-lg hover:bg-white/10 transition-colors border-white/10 text-white"
             title="Maximize"
           >
-            <Maximize2 size={14} className="text-white" />
+            <Maximize2 size={12} />
           </button>
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-white/10 rounded transition-colors"
+            className="p-1.5 glass rounded-lg hover:bg-red-500/20 transition-colors border-white/10 text-white hover:text-red-500"
             title="Close"
           >
-            <X size={14} className="text-white" />
+            <X size={12} />
           </button>
         </div>
       </div>
 
       {/* Video */}
-      <div className="relative aspect-video bg-black">
+      <div className="relative aspect-video bg-black group">
         <video
           ref={videoRef}
           className="w-full h-full object-contain"
@@ -162,30 +163,29 @@ const MiniPlayer: React.FC<MiniPlayerProps> = ({
         />
 
         {/* Controls overlay */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={togglePlay}
-              className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors"
-            >
-              {isPlaying ? (
-                <Pause size={16} className="text-white" fill="currentColor" />
-              ) : (
-                <Play size={16} className="text-white ml-0.5" fill="currentColor" />
-              )}
-            </button>
+        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 backdrop-blur-[2px]">
+          <button
+            onClick={togglePlay}
+            className="p-3 bg-white text-black rounded-full shadow-2xl hover:scale-110 active:scale-90 transition-transform"
+          >
+            {isPlaying ? (
+              <Pause size={18} fill="currentColor" />
+            ) : (
+              <Play size={18} className="ml-0.5" fill="currentColor" />
+            )}
+          </button>
 
-            <button
-              onClick={toggleMute}
-              className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors"
-            >
-              {isMuted ? (
-                <VolumeX size={16} className="text-white" />
-              ) : (
-                <Volume2 size={16} className="text-white" />
-              )}
-            </button>
-          </div>
+          <button
+            onClick={toggleMute}
+            className="p-3 bg-white/10 hover:bg-white/20 rounded-full text-white backdrop-blur-xl transition-all"
+          >
+            {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+          </button>
+        </div>
+
+        {/* Status Line */}
+        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/10">
+          <div className="h-full bg-primary shadow-[0_0_8px_var(--primary)] animate-pulse" style={{ width: isPlaying ? '100%' : '0%' }} />
         </div>
       </div>
     </div>
