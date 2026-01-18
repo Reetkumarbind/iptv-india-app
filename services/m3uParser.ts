@@ -3,13 +3,21 @@ import { IPTVChannel } from '../types.ts';
 
 export const fetchAndParseM3U = async (url: string): Promise<IPTVChannel[]> => {
   let text = '';
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
     if (!response.ok) {
       throw new Error(`Network Error: Server responded with ${response.status} (${response.statusText})`);
     }
     text = await response.text();
   } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Network Error: Connection timed out. The server might be too slow.');
+    }
     if (error instanceof Error && error.message.startsWith('Network Error')) {
       throw error;
     }

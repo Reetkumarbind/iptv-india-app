@@ -7,7 +7,8 @@ const STORAGE_KEYS = {
   CHANNEL_RATINGS: 'iptv_channel_ratings_v1',
   STREAM_HEALTH: 'iptv_stream_health_v1',
   BANDWIDTH_USAGE: 'iptv_bandwidth_usage_v1',
-  RECENTLY_WATCHED: 'iptv_recently_watched_v1'
+  RECENTLY_WATCHED: 'iptv_recently_watched_v1',
+  SECURITY_NOTICE_DISMISSED: 'iptv_security_notice_dismissed_v1'
 };
 
 export class StorageService {
@@ -71,7 +72,7 @@ export class StorageService {
     try {
       const history = this.getWatchHistory();
       const existingIndex = history.findIndex(h => h.channelId === item.channelId);
-      
+
       if (existingIndex >= 0) {
         // Update existing entry with latest timestamp and accumulated duration
         const existing = history[existingIndex];
@@ -83,14 +84,14 @@ export class StorageService {
       } else {
         history.unshift(item);
       }
-      
+
       // Keep only last 100 items for better performance
       const trimmed = history.slice(0, 100);
       this.setItem(STORAGE_KEYS.WATCH_HISTORY, trimmed);
-      
+
       // Also update recently watched cache
       this.setItem(STORAGE_KEYS.RECENTLY_WATCHED, trimmed.slice(0, 20));
-      
+
       console.log(`Watch history updated: ${item.channelName} (${item.duration}s)`);
     } catch (error) {
       console.error('Failed to save watch history:', error);
@@ -137,13 +138,13 @@ export class StorageService {
     try {
       const ratings = this.getChannelRatings();
       const existingIndex = ratings.findIndex(r => r.channelId === rating.channelId);
-      
+
       if (existingIndex >= 0) {
         ratings[existingIndex] = rating;
       } else {
         ratings.push(rating);
       }
-      
+
       this.setItem(STORAGE_KEYS.CHANNEL_RATINGS, ratings);
     } catch (error) {
       console.error('Failed to save rating:', error);
@@ -164,17 +165,17 @@ export class StorageService {
     try {
       const healthData = this.getStreamHealth();
       const existingIndex = healthData.findIndex(h => h.channelId === health.channelId);
-      
+
       if (existingIndex >= 0) {
         healthData[existingIndex] = health;
       } else {
         healthData.push(health);
       }
-      
+
       // Keep only recent data (last 24 hours)
       const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
       const filtered = healthData.filter(h => h.lastChecked > oneDayAgo);
-      
+
       this.setItem(STORAGE_KEYS.STREAM_HEALTH, filtered);
     } catch (error) {
       console.error('Failed to save stream health:', error);
@@ -191,13 +192,13 @@ export class StorageService {
       const today = new Date().toISOString().split('T')[0];
       const usage = this.getBandwidthUsage();
       usage[today] = (usage[today] || 0) + bytes;
-      
+
       // Keep only last 30 days of data
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       const filtered = Object.fromEntries(
         Object.entries(usage).filter(([date]) => date >= thirtyDaysAgo)
       );
-      
+
       this.setItem(STORAGE_KEYS.BANDWIDTH_USAGE, filtered);
     } catch (error) {
       console.error('Failed to save bandwidth usage:', error);
@@ -219,15 +220,24 @@ export class StorageService {
   static importData(jsonData: string): boolean {
     try {
       const data = JSON.parse(jsonData);
-      
+
       if (data.favorites) localStorage.setItem(STORAGE_KEYS.FAVORITES, data.favorites);
       if (data.watchHistory) localStorage.setItem(STORAGE_KEYS.WATCH_HISTORY, data.watchHistory);
       if (data.preferences) localStorage.setItem(STORAGE_KEYS.USER_PREFERENCES, data.preferences);
       if (data.ratings) localStorage.setItem(STORAGE_KEYS.CHANNEL_RATINGS, data.ratings);
-      
+
       return true;
     } catch {
       return false;
     }
+  }
+
+  // Security Notice
+  static isSecurityNoticeDismissed(): boolean {
+    return this.getItem(STORAGE_KEYS.SECURITY_NOTICE_DISMISSED, false);
+  }
+
+  static dismissSecurityNotice(): void {
+    this.setItem(STORAGE_KEYS.SECURITY_NOTICE_DISMISSED, true);
   }
 }

@@ -11,7 +11,7 @@ import SettingsPanel from './components/SettingsPanel';
 import KeyboardShortcuts from './components/KeyboardShortcuts';
 import MiniPlayer from './components/MiniPlayer';
 import SecurityIndicator from './components/SecurityIndicator';
-import { Loader2, AlertCircle, ChevronLeft, Settings, Keyboard, Tv } from 'lucide-react';
+import { Loader2, AlertCircle, ChevronLeft, Settings, Keyboard, Tv, ShieldCheck, RefreshCw } from 'lucide-react';
 
 const M3U_URL = 'https://iptv-org.github.io/iptv/countries/in.m3u';
 
@@ -29,8 +29,10 @@ const App: React.FC = () => {
   const [preferences, setPreferences] = useState<UserPreferences>(StorageService.getUserPreferences());
   const [showSettings, setShowSettings] = useState(false);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
+  const [showSecurityNotice, setShowSecurityNotice] = useState(!StorageService.isSecurityNoticeDismissed());
   const [keyboardService] = useState(() => new KeyboardService());
   const [miniPlayerPosition, setMiniPlayerPosition] = useState({ x: 20, y: 20 });
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Initialize security service (optional for normal mode)
   useEffect(() => {
@@ -48,41 +50,40 @@ const App: React.FC = () => {
     const initApp = async () => {
       try {
         setIsLoading(true);
-        console.log('🚀 Initializing app...');
+        setError(null);
+        console.log('🚀 Initializing app (Refresh:', refreshKey, ')...');
 
-        // Skip security validation for normal mode
-        console.log('🔍 Loading M3U URL:', M3U_URL);
-
-        // Load favorites using StorageService
-        console.log('📂 Loading favorites...');
+        // Load favorites
         const savedFavorites = StorageService.getFavorites();
         setFavorites(new Set(savedFavorites));
-        console.log('✅ Favorites loaded:', savedFavorites.length);
 
         console.log('📡 Fetching M3U playlist...');
         const data = await fetchAndParseM3U(M3U_URL);
-        console.log('✅ M3U data received:', data.length, 'channels');
 
-        // Basic validation without security service
-        console.log('🔒 Basic channel validation...');
         const validChannels = data.filter(channel =>
-          channel.url &&
-          channel.name &&
-          channel.id
+          channel.url && channel.name && channel.id
         );
-        console.log('✅ Channels validated:', validChannels.length, 'valid channels');
 
         setChannels(validChannels);
-        console.log('🎉 App initialization complete!');
+        console.log('🎉 App initialized with', validChannels.length, 'channels');
       } catch (err) {
         console.error('❌ App initialization failed:', err);
-        setError('Connection failed. Please check your internet.');
+        setError(err instanceof Error ? err.message : 'Connection failed. Please check your internet.');
       } finally {
         setIsLoading(false);
       }
     };
     initApp();
+  }, [refreshKey]);
+
+  const handleRefresh = useCallback(() => {
+    setRefreshKey(prev => prev + 1);
   }, []);
+
+  const dismissSecurityNotice = () => {
+    StorageService.dismissSecurityNotice();
+    setShowSecurityNotice(false);
+  };
 
   // Setup keyboard shortcuts
   useEffect(() => {
@@ -401,6 +402,7 @@ const App: React.FC = () => {
           favorites={favorites}
           onSelect={handleSelectChannel}
           onToggleFavorite={toggleFavorite}
+          onRefresh={handleRefresh}
         />
       ) : viewMode === 'player' ? (
         <div className="h-full w-full flex flex-col relative bg-black">
@@ -435,6 +437,37 @@ const App: React.FC = () => {
         preferences={preferences}
         onPreferencesChange={handlePreferencesChange}
       />
+
+      {/* Security Notice Modal */}
+      {showSecurityNotice && window.location.protocol === 'https:' && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-xl p-4 animate-in fade-in duration-500">
+          <div className="max-w-md w-full glass-card border-primary/20 p-8 rounded-[2.5rem] shadow-2xl">
+            <div className="w-16 h-16 bg-primary/10 rounded-3xl flex items-center justify-center mb-6">
+              <ShieldCheck className="text-primary" size={32} />
+            </div>
+            <h3 className="text-xl font-black text-white uppercase tracking-[0.2em] mb-4">Security Note</h3>
+            <p className="text-text-muted text-[10px] font-bold uppercase tracking-widest leading-relaxed mb-8">
+              Some premium streams use <span className="text-white">HTTP</span> links which browsers often block for security on <span className="text-primary underline">HTTPS</span> sites like this one.
+              <br /><br />
+              If a channel doesn't play:
+              <br />
+              1. Click the <span className="text-white">Lock Icon</span> in address bar.
+              <br />
+              2. Go to <span className="text-white">Site Settings</span>.
+              <br />
+              3. Set <span className="text-white">"Insecure content"</span> to <span className="text-green-500">"Allow"</span>.
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={dismissSecurityNotice}
+                className="w-full py-4 bg-primary text-slate-950 text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl hover:scale-102 transition-transform shadow-lg shadow-primary/20"
+              >
+                I Understand
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Keyboard Shortcuts Panel */}
       <KeyboardShortcuts

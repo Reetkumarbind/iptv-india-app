@@ -36,6 +36,7 @@ interface ChannelGalleryProps {
   favorites: Set<string>;
   onSelect: (index: number) => void;
   onToggleFavorite: (id: string) => void;
+  onRefresh?: () => void;
 }
 
 const CATEGORY_CONFIG: Record<string, { name: string, icon: React.ElementType }> = {
@@ -53,7 +54,7 @@ const CATEGORY_CONFIG: Record<string, { name: string, icon: React.ElementType }>
 type SortOrder = 'none' | 'name-asc' | 'name-desc' | 'group-asc' | 'group-desc' | 'trending' | 'recent';
 type ViewMode = 'all' | 'favorites' | 'recent' | 'trending';
 
-const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, onSelect, onToggleFavorite }) => {
+const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, onSelect, onToggleFavorite, onRefresh }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGroup, setSelectedGroup] = useState('All');
   const [selectedLanguage, setSelectedLanguage] = useState('All');
@@ -152,11 +153,21 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
     setSearchTerm(query);
   };
 
+  const handleRefresh = () => {
+    if (onRefresh) {
+      onRefresh();
+    }
+  };
+
   const filteredChannels = useMemo(() => {
     let result = channels
       .map((channel: any, index: number) => ({ ...channel, originalIndex: index }))
       .filter((channel: any) => {
-        const matchesSearch = channel.name.toLowerCase().includes(searchTerm.toLowerCase());
+        const searchWords = searchTerm.toLowerCase().split(/\s+/).filter(Boolean);
+        const matchesSearch = searchWords.length === 0 || searchWords.every(word =>
+          channel.name.toLowerCase().includes(word) ||
+          (channel.group || '').toLowerCase().includes(word)
+        );
 
         let matchesGroup = true;
         if (selectedGroup !== 'All') {
@@ -293,6 +304,15 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
                   <VoiceSearch onSearchResult={handleVoiceSearchResult} isSupported={isVoiceSupported} />
+                  {onRefresh && (
+                    <button
+                      onClick={handleRefresh}
+                      className="p-2 glass text-text-muted hover:text-primary transition-all rounded-lg active:rotate-180 duration-500"
+                      title="Refresh Playlist"
+                    >
+                      <RefreshCw size={14} />
+                    </button>
+                  )}
                   {searchTerm && (
                     <button onClick={() => setSearchTerm('')} className="text-text-muted hover:text-white p-1">
                       <X size={14} />
