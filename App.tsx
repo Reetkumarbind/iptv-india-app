@@ -343,7 +343,7 @@ const App: React.FC = () => {
             <div className="flex items-center justify-center gap-3">
               <div className="h-[1px] w-8 bg-blue-500/50" />
               <p className="text-slate-500 text-[10px] sm:text-xs font-black uppercase tracking-[0.3em]">
-                Premium Stream Library
+                ReetTVChannel Premium Streams
               </p>
               <div className="h-[1px] w-8 bg-blue-500/50" />
             </div>

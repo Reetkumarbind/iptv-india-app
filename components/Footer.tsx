@@ -13,8 +13,8 @@ const Footer: React.FC = () => {
               <Tv size={28} strokeWidth={3} />
             </div>
             <div>
-              <h2 className="text-3xl font-black text-white uppercase tracking-tighter leading-none mb-2">REET TV</h2>
-              <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em]">ELITE BROADCAST ENGINE</p>
+              <h2 className="text-3xl font-black text-white uppercase tracking-tighter leading-none mb-2">REET TV CHANNEL</h2>
+              <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em]">ReetTV • ReetTVChannel • Elite Streams</p>
             </div>
           </div>
 

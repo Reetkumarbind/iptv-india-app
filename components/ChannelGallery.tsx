@@ -288,8 +288,9 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
                 </div>
                 <div className="hidden lg:block">
                   <h1 className="text-xl font-black tracking-tighter text-white uppercase leading-none">
-                    REET <span className="text-primary">TV</span>
+                    REET <span className="text-primary">TV CHANNEL</span>
                   </h1>
+                  <span className="text-[8px] font-black text-white/30 tracking-[0.4em] uppercase">ReetTVChannel Premium</span>
                 </div>
               </div>
 
@@ -438,10 +439,10 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
                   <Sparkles size={14} /> Spotlight
                 </div>
                 <h2 className="text-4xl sm:text-6xl font-black text-white uppercase tracking-tighter mb-6 leading-tight">
-                  Experience <span className="text-gradient-premium">Infinity</span> TV
+                  Experience <span className="text-gradient-premium">ReetTV</span> Channel
                 </h2>
                 <p className="text-text-muted text-sm sm:text-lg mb-8 max-w-xl font-medium tracking-wide leading-relaxed">
-                  Stream your favorite content with unparalleled quality. Over {channels.length} channels at your fingertips.
+                  Stream your favorite content with unparalleled quality on REET TV CHANNEL. The ultimate ReetTVChannel experience with over {channels.length} channels at your fingertips.
                 </p>
                 <button
                   onClick={() => onSelect(Math.floor(Math.random() * channels.length))}
