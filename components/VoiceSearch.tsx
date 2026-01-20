@@ -39,20 +39,20 @@ const VoiceSearch: React.FC<VoiceSearchProps> = ({ onSearchResult, isSupported }
     <div className="relative">
       <button
         onClick={isListening ? stopListening : handleVoiceSearch}
-        className={`p-3 rounded-2xl transition-all border-white/10 ${isListening
+        className={`p-2.5 rounded-xl transition-all duration-300 border border-white/5 ${isListening
             ? 'bg-red-500 text-white shadow-lg shadow-red-500/20'
-            : 'glass text-text-muted hover:text-white hover:bg-white/10'
+            : 'glass text-text-muted hover:text-primary hover:bg-white/5'
           }`}
         title={isListening ? 'Stop listening' : 'Voice Search'}
       >
         {isListening ? (
-          <div className="flex items-center gap-2">
-            <div className="w-1 h-3 bg-white animate-bounce [animation-delay:-0.3s]" />
-            <div className="w-1 h-4 bg-white animate-bounce [animation-delay:-0.15s]" />
-            <div className="w-1 h-3 bg-white animate-bounce" />
+          <div className="flex items-center gap-1">
+            <div className="w-0.5 h-3 bg-white animate-bounce [animation-delay:-0.3s]" />
+            <div className="w-0.5 h-4 bg-white animate-bounce [animation-delay:-0.15s]" />
+            <div className="w-0.5 h-3 bg-white animate-bounce" />
           </div>
         ) : (
-          <Mic size={20} />
+          <Mic size={16} />
         )}
       </button>
 

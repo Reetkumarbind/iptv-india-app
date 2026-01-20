@@ -302,26 +302,34 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
                   placeholder="Search premium channels..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full glass bg-white/5 border-white/5 rounded-2xl py-3 pl-12 pr-12 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-text-muted"
+                  className="w-full glass bg-white/5 border-white/5 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-text-muted"
                 />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                  <VoiceSearch onSearchResult={handleVoiceSearchResult} isSupported={isVoiceSupported} />
-                  {onRefresh && (
-                    <button
-                      onClick={handleRefresh}
-                      className="p-2 glass text-text-muted hover:text-primary transition-all rounded-lg active:rotate-180 duration-500"
-                      title="Refresh Playlist"
-                    >
-                      <RefreshCw size={14} />
-                    </button>
-                  )}
-                  {searchTerm && (
-                    <button onClick={() => setSearchTerm('')} className="text-text-muted hover:text-white p-1">
-                      <X size={14} />
-                    </button>
-                  )}
-                </div>
+                {searchTerm && (
+                  <button 
+                    onClick={() => setSearchTerm('')} 
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-white p-1 transition-colors"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
               </div>
+            </div>
+
+            {/* Right Side Controls */}
+            <div className="flex items-center gap-3">
+              {/* Voice Search */}
+              <VoiceSearch onSearchResult={handleVoiceSearchResult} isSupported={isVoiceSupported} />
+              
+              {/* Refresh Button */}
+              {onRefresh && (
+                <button
+                  onClick={handleRefresh}
+                  className="p-2.5 glass text-text-muted hover:text-primary transition-all rounded-xl active:rotate-180 duration-500 border border-white/5"
+                  title="Refresh Playlist"
+                >
+                  <RefreshCw size={16} />
+                </button>
+              )}
             </div>
 
             {/* View Modes Group */}
@@ -355,13 +363,17 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
               <div className="relative" ref={categoryRef}>
                 <button
                   onClick={() => setIsCategoryOpen(!isCategoryOpen)}
-                  className="btn-premium px-4 py-3"
+                  className={`px-4 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 ${
+                    selectedGroup !== 'All' 
+                      ? 'bg-primary text-white shadow-lg shadow-primary/20' 
+                      : 'glass text-text-muted hover:text-white'
+                  }`}
                 >
-                  <SelectedIcon size={14} className="text-primary" />
+                  <SelectedIcon size={14} />
                   <span className="text-[10px] font-black uppercase tracking-widest hidden lg:inline">
                     {selectedGroup === 'All' ? 'Categories' : selectedGroup}
                   </span>
-                  <ChevronDown size={14} className={`text-text-muted transition-transform ${isCategoryOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown size={14} className={`transition-transform ${isCategoryOpen ? 'rotate-180' : ''}`} />
                 </button>
 
                 {isCategoryOpen && (
@@ -388,13 +400,17 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
               <div className="relative" ref={languageRef}>
                 <button
                   onClick={() => setIsLanguageOpen(!isLanguageOpen)}
-                  className="btn-premium px-4 py-3"
+                  className={`px-4 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 ${
+                    selectedLanguage !== 'All' 
+                      ? 'bg-green-500 text-white shadow-lg shadow-green-500/20' 
+                      : 'glass text-text-muted hover:text-white'
+                  }`}
                 >
-                  <Globe size={14} className="text-secondary" />
+                  <Globe size={14} />
                   <span className="text-[10px] font-black uppercase tracking-widest hidden lg:inline">
                     {selectedLanguage === 'All' ? 'Languages' : selectedLanguage}
                   </span>
-                  <ChevronDown size={14} className={`text-text-muted transition-transform ${isLanguageOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown size={14} className={`transition-transform ${isLanguageOpen ? 'rotate-180' : ''}`} />
                 </button>
 
                 {isLanguageOpen && (
@@ -415,8 +431,15 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
               </div>
 
               {/* Sort */}
-              <button onClick={cycleSort} className="btn-premium px-4 py-3">
-                <SortAsc size={14} className="text-accent" />
+              <button 
+                onClick={cycleSort} 
+                className={`px-4 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 ${
+                  sortOrder !== 'none' 
+                    ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/20' 
+                    : 'glass text-text-muted hover:text-white'
+                }`}
+              >
+                <SortAsc size={14} />
                 <span className="text-[10px] font-black uppercase tracking-widest hidden lg:inline">{getSortLabel()}</span>
               </button>
             </div>
