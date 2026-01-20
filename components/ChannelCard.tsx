@@ -134,17 +134,17 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
           )}
         </div>
 
-        {/* Info Content */}
-        <div className="p-3 bg-slate-950 border-t border-white/5 relative">
-          <h3 className="text-[11px] font-bold text-white truncate uppercase tracking-wide group-hover:text-primary transition-colors">
+        {/* Info Content - Bigger and more readable */}
+        <div className="p-4 bg-slate-950 border-t border-white/5 relative">
+          <h3 className="text-sm font-bold text-white truncate uppercase tracking-wide group-hover:text-primary transition-colors leading-tight">
             {channel.name}
           </h3>
           {currentProgram ? (
-            <p className="text-[9px] font-medium text-slate-400 truncate uppercase tracking-wider mt-0.5">
+            <p className="text-xs font-medium text-slate-400 truncate uppercase tracking-wider mt-1.5">
               {currentProgram.title}
             </p>
           ) : (
-            <p className="text-[9px] font-medium text-slate-500 truncate uppercase tracking-wider mt-0.5">
+            <p className="text-xs font-medium text-slate-500 truncate uppercase tracking-wider mt-1.5">
               Premium Content
             </p>
           )}

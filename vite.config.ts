@@ -26,7 +26,16 @@ export default defineConfig({
         drop_console: true,
         drop_debugger: true
       }
-    }
+    },
+    // Performance optimizations
+    chunkSizeWarningLimit: 1000,
+    cssCodeSplit: true,
+    assetsInlineLimit: 4096,
+  },
+  // Optimize dependencies
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'hls.js', 'lucide-react'],
+    exclude: []
   },
   define: {
     __DEV__: JSON.stringify(process.env.NODE_ENV === 'development')
