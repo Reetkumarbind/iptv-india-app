@@ -436,13 +436,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       className="fixed inset-0 bg-black overflow-hidden flex flex-col group cursor-none selection:bg-transparent"
       style={{ 
         cursor: showControls ? 'default' : 'none',
-        paddingTop: 'env(safe-area-inset-top)',
-        paddingBottom: 'env(safe-area-inset-bottom)',
-        paddingLeft: 'env(safe-area-inset-left)',
-        paddingRight: 'env(safe-area-inset-right)',
         width: '100vw',
-        height: '100vh',
-        height: '100dvh', // Dynamic viewport height for mobile
+        height: '100dvh',
+        margin: 0,
+        padding: 0,
       }}
       onMouseMove={resetControlsTimer}
       onTouchStart={resetControlsTimer}
@@ -452,6 +449,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       <video
         ref={videoRef}
         className={`w-full h-full object-${aspectRatio}`}
+        style={{
+          width: '100vw',
+          height: '100dvh',
+          margin: 0,
+          padding: 0,
+        }}
         onClick={togglePlay}
         onDoubleClick={toggleFullscreen}
         onPlay={() => setIsPlaying(true)}
@@ -461,7 +464,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       />
 
       {/* Top Header Overlay */}
-      <div className={`absolute top-0 inset-x-0 p-4 sm:p-8 pt-6 sm:pt-10 bg-gradient-to-b from-black/80 via-black/20 to-transparent transition-all duration-500 z-50 ${showControls ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'}`}>
+      <div 
+        className={`absolute top-0 inset-x-0 bg-gradient-to-b from-black/80 via-black/20 to-transparent transition-all duration-500 z-50 ${showControls ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'}`}
+        style={{
+          paddingTop: 'max(1rem, env(safe-area-inset-top))',
+          paddingLeft: 'max(1rem, env(safe-area-inset-left))',
+          paddingRight: 'max(1rem, env(safe-area-inset-right))',
+          paddingBottom: '1rem',
+        }}
+      >
         <div className="max-w-[1920px] mx-auto flex items-center justify-between gap-2 sm:gap-8">
           <div className="flex items-center gap-3 sm:gap-6 overflow-hidden min-w-0">
             <button
