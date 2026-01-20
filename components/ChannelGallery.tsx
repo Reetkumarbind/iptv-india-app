@@ -384,7 +384,7 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
                   <Sparkles size={14} /> Spotlight
                 </div>
                 <h2 className="text-4xl sm:text-6xl font-black text-white uppercase tracking-tighter mb-6 leading-tight">
-                  Experience <span className="text-gradient-premium">ReetTV</span> Channel
+                  Experience <span className="text-gradient-premium">Live</span> TV
                 </h2>
                 <p className="text-text-muted text-sm sm:text-lg mb-8 max-w-xl font-medium tracking-wide leading-relaxed">
                   Stream your favorite content with unparalleled quality on REET TV CHANNEL. The ultimate ReetTVChannel experience with over {channels.length} channels at your fingertips.

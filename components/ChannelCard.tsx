@@ -115,8 +115,11 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
               </div>
             </>
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center text-white/20 bg-black">
-              <GroupIcon size={64} strokeWidth={1.5} />
+            <div className="w-full h-full flex flex-col items-center justify-center text-white/30 bg-gradient-to-br from-slate-900 to-black p-8">
+              <GroupIcon size={80} strokeWidth={1.5} className="mb-4 text-white/20" />
+              <p className="text-center text-sm font-bold text-white/40 uppercase tracking-wider px-4 leading-tight">
+                {channel.name}
+              </p>
             </div>
           )}
 
