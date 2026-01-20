@@ -502,9 +502,9 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
           )}
         </div>
 
-        {/* Grid - Bigger cards with better readability */}
+        {/* Grid - ATM card size (credit card aspect ratio 1.586:1) */}
         {filteredChannels.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8 sm:gap-10">
             {visibleChannels.map((channel) => (
               <ChannelCard
                 key={channel.id + channel.originalIndex}
