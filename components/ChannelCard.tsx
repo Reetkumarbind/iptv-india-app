@@ -166,6 +166,9 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
         {/* Enhanced Info Content - More space for details */}
         <div className="h-[35%] p-6 bg-black border-t-2 border-white/20 relative flex flex-col justify-between">
           <div>
+            <h3 className="text-base font-black text-white truncate uppercase tracking-wide group-hover:text-primary transition-colors leading-tight mb-2">
+              {channel.name}
+            </h3>
             {currentProgram ? (
               <>
                 <p className="text-sm font-bold text-slate-300 truncate mb-2 leading-relaxed">

@@ -357,92 +357,18 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
               ))}
             </div>
 
-            {/* Sub-Filters */}
-            <div className="flex items-center gap-3">
-              {/* Category */}
-              <div className="relative" ref={categoryRef}>
-                <button
-                  onClick={() => setIsCategoryOpen(!isCategoryOpen)}
-                  className={`px-4 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 ${
-                    selectedGroup !== 'All' 
-                      ? 'bg-primary text-white shadow-lg shadow-primary/20' 
-                      : 'glass text-text-muted hover:text-white'
-                  }`}
-                >
-                  <SelectedIcon size={14} />
-                  <span className="text-[10px] font-black uppercase tracking-widest hidden lg:inline">
-                    {selectedGroup === 'All' ? 'Categories' : selectedGroup}
-                  </span>
-                  <ChevronDown size={14} className={`transition-transform ${isCategoryOpen ? 'rotate-180' : ''}`} />
-                </button>
-
-                {isCategoryOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-56 glass rounded-2xl shadow-2xl py-2 z-[60] overflow-hidden animate-in fade-in zoom-in-95">
-                    {groups.map((group) => {
-                      const Icon = getCategoryIcon(group);
-                      return (
-                        <button
-                          key={group}
-                          onClick={() => { setSelectedGroup(group); setIsCategoryOpen(false); }}
-                          className={`w-full px-5 py-3 flex items-center gap-4 text-[10px] font-black uppercase tracking-widest transition-colors ${selectedGroup === group ? 'bg-primary/10 text-primary' : 'text-text-muted hover:bg-white/5 hover:text-white'
-                            }`}
-                        >
-                          <Icon size={14} />
-                          {group}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              {/* Languages */}
-              <div className="relative" ref={languageRef}>
-                <button
-                  onClick={() => setIsLanguageOpen(!isLanguageOpen)}
-                  className={`px-4 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 ${
-                    selectedLanguage !== 'All' 
-                      ? 'bg-green-500 text-white shadow-lg shadow-green-500/20' 
-                      : 'glass text-text-muted hover:text-white'
-                  }`}
-                >
-                  <Globe size={14} />
-                  <span className="text-[10px] font-black uppercase tracking-widest hidden lg:inline">
-                    {selectedLanguage === 'All' ? 'Languages' : selectedLanguage}
-                  </span>
-                  <ChevronDown size={14} className={`transition-transform ${isLanguageOpen ? 'rotate-180' : ''}`} />
-                </button>
-
-                {isLanguageOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-56 glass rounded-2xl shadow-2xl py-2 z-[60] overflow-hidden animate-in fade-in zoom-in-95">
-                    {languages.map((lang) => (
-                      <button
-                        key={lang}
-                        onClick={() => { setSelectedLanguage(lang); setIsLanguageOpen(false); }}
-                        className={`w-full px-5 py-3 flex items-center gap-4 text-[10px] font-black uppercase tracking-widest transition-colors ${selectedLanguage === lang ? 'bg-secondary/10 text-secondary' : 'text-text-muted hover:bg-white/5 hover:text-white'
-                          }`}
-                      >
-                        <Globe size={14} />
-                        {lang}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Sort */}
-              <button 
-                onClick={cycleSort} 
-                className={`px-4 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 ${
-                  sortOrder !== 'none' 
-                    ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/20' 
-                    : 'glass text-text-muted hover:text-white'
-                }`}
-              >
-                <SortAsc size={14} />
-                <span className="text-[10px] font-black uppercase tracking-widest hidden lg:inline">{getSortLabel()}</span>
-              </button>
-            </div>
+            {/* Sort Button */}
+            <button 
+              onClick={cycleSort} 
+              className={`px-4 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 ${
+                sortOrder !== 'none' 
+                  ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/20' 
+                  : 'glass text-text-muted hover:text-white'
+              }`}
+            >
+              <SortAsc size={14} />
+              <span className="text-[10px] font-black uppercase tracking-widest hidden lg:inline">{getSortLabel()}</span>
+            </button>
           </div>
         </div>
       </div>
