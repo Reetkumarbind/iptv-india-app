@@ -80,13 +80,13 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
   };
 
   return (
-    <div className="group relative aspect-[1.586/2] overflow-hidden glass-card hover:scale-[1.02] transition-all duration-500 ease-out shadow-2xl hover:shadow-primary/30">
+    <div className="group relative aspect-[1.586/2] overflow-hidden rounded-3xl bg-black hover:scale-[1.02] transition-all duration-500 ease-out shadow-2xl hover:shadow-primary/30 border-2 border-white/10">
       <button
         onClick={onClick}
         className="w-full h-full flex flex-col text-left"
       >
         {/* Banner/Logo Container - Takes up more space now */}
-        <div className="relative h-[65%] w-full overflow-hidden bg-cyan-400">
+        <div className="relative h-[65%] w-full overflow-hidden bg-black">
           {channel.logo && !imgLoaded && !imgError && (
             <div className="absolute inset-0 flex items-center justify-center">
               <Loader2 className="animate-spin text-white/50" size={32} />
@@ -96,11 +96,11 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
           {channel.logo && !imgError ? (
             <>
               {!imgLoaded && (
-                <div className="absolute inset-0 flex items-center justify-center bg-cyan-400">
-                  <Loader2 className="animate-spin text-white/50" size={32} />
+                <div className="absolute inset-0 flex items-center justify-center bg-black">
+                  <Loader2 className="animate-spin text-white/30" size={32} />
                 </div>
               )}
-              <div className="w-full h-full bg-cyan-400 flex items-center justify-center p-8">
+              <div className="w-full h-full bg-black flex items-center justify-center p-8">
                 <img
                   src={channel.logo}
                   alt={channel.name}
@@ -115,19 +115,27 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
               </div>
             </>
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center text-white/30 bg-cyan-400">
+            <div className="w-full h-full flex flex-col items-center justify-center text-white/20 bg-black">
               <GroupIcon size={64} strokeWidth={1.5} />
-              <p className="text-xs font-bold mt-3 text-white/40 uppercase tracking-wider">{channel.name}</p>
             </div>
           )}
 
           {/* Premium Overlay Gradient - Subtle for logo visibility */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
           {/* Interactive States - Larger play button */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 bg-black/40 backdrop-blur-sm">
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 bg-black/60 backdrop-blur-sm">
             <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-slate-950 shadow-2xl scale-75 group-hover:scale-100 transition-transform duration-500">
               <Play size={32} fill="currentColor" className="ml-1" />
+            </div>
+          </div>
+
+          {/* Channel Name Frame at Bottom Center */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[85%]">
+            <div className="bg-white/10 backdrop-blur-md border-2 border-white/20 rounded-2xl px-4 py-3 shadow-2xl">
+              <h3 className="text-sm font-black text-white text-center uppercase tracking-wide truncate">
+                {channel.name}
+              </h3>
             </div>
           </div>
 
@@ -156,11 +164,8 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
         </div>
 
         {/* Enhanced Info Content - More space for details */}
-        <div className="h-[35%] p-6 bg-gradient-to-b from-slate-900 to-black border-t border-white/10 relative flex flex-col justify-between">
+        <div className="h-[35%] p-6 bg-black border-t-2 border-white/10 relative flex flex-col justify-between">
           <div>
-            <h3 className="text-lg font-black text-white truncate uppercase tracking-wide group-hover:text-primary transition-colors leading-tight mb-2">
-              {channel.name}
-            </h3>
             {currentProgram ? (
               <>
                 <p className="text-sm font-bold text-slate-300 truncate mb-2 leading-relaxed">
