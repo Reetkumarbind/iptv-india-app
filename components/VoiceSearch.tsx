@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { VoiceSearchService } from '../services/voiceSearchService';
-import { Mic, MicOff, Loader2 } from 'lucide-react';
+import { Mic } from 'lucide-react';
 
 interface VoiceSearchProps {
   onSearchResult: (query: string) => void;

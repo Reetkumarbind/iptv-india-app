@@ -12,7 +12,6 @@ import {
   Search,
   Tv,
   X,
-  ChevronDown,
   Newspaper,
   Trophy,
   Film,
@@ -22,12 +21,9 @@ import {
   SortAsc,
   Sparkles,
   Heart,
-  Tags,
-  FilterX,
   Plus,
   TrendingUp,
   Clock,
-  Globe,
   Zap,
   RefreshCw
 } from 'lucide-react';
