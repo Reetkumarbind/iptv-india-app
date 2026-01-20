@@ -80,7 +80,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
   };
 
   return (
-    <div className="group relative aspect-[1.586/2] overflow-hidden rounded-3xl bg-black hover:scale-[1.02] transition-all duration-500 ease-out shadow-2xl hover:shadow-primary/30 border-2 border-white/10">
+    <div className="group relative aspect-[1.586/2] overflow-hidden rounded-3xl bg-black hover:scale-[1.02] transition-all duration-500 ease-out shadow-2xl hover:shadow-primary/30 border-2 border-white/20">
       <button
         onClick={onClick}
         className="w-full h-full flex flex-col text-left"
@@ -164,7 +164,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
         </div>
 
         {/* Enhanced Info Content - More space for details */}
-        <div className="h-[35%] p-6 bg-black border-t-2 border-white/10 relative flex flex-col justify-between">
+        <div className="h-[35%] p-6 bg-black border-t-2 border-white/20 relative flex flex-col justify-between">
           <div>
             {currentProgram ? (
               <>

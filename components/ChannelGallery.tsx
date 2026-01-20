@@ -452,10 +452,10 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
                 </button>
               </div>
 
-              <div className="w-full lg:w-1/3 relative aspect-video glass rounded-3xl overflow-hidden border-2 border-primary/20 shadow-2xl shadow-primary/10 animate-float">
+              <div className="w-full lg:w-1/3 relative aspect-video rounded-3xl overflow-hidden border-2 border-primary/20 shadow-2xl shadow-primary/10 animate-float bg-black">
                 <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent z-10"></div>
                 {channels[0]?.logo && (
-                  <div className="w-full h-full bg-cyan-400 flex items-center justify-center p-12">
+                  <div className="w-full h-full bg-black flex items-center justify-center p-12">
                     <img src={channels[0].logo} className="max-w-full max-h-full object-contain" alt="" />
                   </div>
                 )}

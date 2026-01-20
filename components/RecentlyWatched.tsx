@@ -57,9 +57,9 @@ const RecentlyWatched: React.FC<RecentlyWatchedProps> = ({
               onClick={() => onSelectChannel(item.channelId)}
               className="group flex-shrink-0 w-56 cursor-pointer"
             >
-              <div className="relative aspect-video glass-card overflow-hidden mb-3 border-white/5 hover:scale-[1.05] transition-all duration-500 shadow-xl hover:shadow-primary/20">
+              <div className="relative aspect-video rounded-2xl overflow-hidden mb-3 border-2 border-white/20 hover:scale-[1.05] transition-all duration-500 shadow-xl hover:shadow-primary/20 bg-black">
                 {item.logo ? (
-                  <div className="w-full h-full bg-cyan-400 flex items-center justify-center p-6">
+                  <div className="w-full h-full bg-black flex items-center justify-center p-6">
                     <img
                       src={item.logo}
                       alt={item.channelName}
@@ -69,19 +69,28 @@ const RecentlyWatched: React.FC<RecentlyWatchedProps> = ({
                     />
                   </div>
                 ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-cyan-400 text-white/30">
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-black text-white/30">
                     <Play className="text-white/20" size={32} />
                     <p className="text-xs font-bold mt-2 text-white/40 uppercase tracking-wider px-2 text-center">{item.channelName}</p>
                   </div>
                 )}
 
                 {/* Premium Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
                 {/* Play overlay */}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-sm">
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-sm">
                   <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-2xl">
                     <Play className="text-slate-950 ml-1" size={20} fill="currentColor" />
+                  </div>
+                </div>
+
+                {/* Channel Name Frame at Bottom Center */}
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[85%]">
+                  <div className="bg-white/10 backdrop-blur-md border-2 border-white/20 rounded-xl px-3 py-2 shadow-2xl">
+                    <h3 className="text-xs font-black text-white text-center uppercase tracking-wide truncate">
+                      {item.channelName}
+                    </h3>
                   </div>
                 </div>
 
@@ -92,7 +101,6 @@ const RecentlyWatched: React.FC<RecentlyWatchedProps> = ({
               </div>
 
               <div className="px-1">
-                <h3 className="text-[11px] font-bold text-white truncate uppercase tracking-wide group-hover:text-primary transition-colors">{item.channelName}</h3>
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="text-[9px] font-black text-primary uppercase tracking-widest">{formatTimeAgo(item.timestamp)}</span>
                   <span className="w-1 h-1 bg-white/10 rounded-full" />

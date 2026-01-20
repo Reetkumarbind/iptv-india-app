@@ -128,7 +128,7 @@ const MiniPlayer: React.FC<MiniPlayerProps> = ({
       >
         <div className="flex items-center gap-3 flex-1 min-w-0">
           {channel.logo && (
-            <div className="w-5 h-5 bg-cyan-400 rounded flex items-center justify-center p-0.5">
+            <div className="w-5 h-5 bg-black rounded flex items-center justify-center p-0.5 border-2 border-white/20">
               <img src={channel.logo} alt="" className="w-full h-full object-contain" />
             </div>
           )}

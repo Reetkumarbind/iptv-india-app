@@ -166,25 +166,26 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const isChannelHttp = channel.url.startsWith('http:');
 
     if (isHttps && isChannelHttp) {
-      console.warn('Mixed Content detected: Loading HTTP stream on HTTPS site');
-      setError('Browser Security Block: This channel uses an insecure (HTTP) link which is blocked on this secure (HTTPS) site. Try using a browser with "Insecure content" allowed for this site.');
+      console.warn('Mixed Content detected: Skipping to next channel');
       setIsLoading(false);
-      // We don't auto-skip here because we want to show the specific error
+      // Auto-skip to next channel
+      setTimeout(() => onNext(), 500);
       return;
     }
 
-    // Set a timeout for loading (20 seconds)
+    // Set a timeout for loading (10 seconds for faster skip)
     loadTimeout = window.setTimeout(() => {
       if (isLoading) {
-        console.error('Stream loading timeout for:', channel.name);
+        console.error('Stream loading timeout for:', channel.name, '- Skipping to next');
         updateStreamHealth('failed');
         setIsLoading(false);
         if (hls) {
           hls.destroy();
         }
-        setError('Stream loading timed out. The server might be down or blocked by your provider.');
+        // Auto-skip to next channel
+        onNext();
       }
-    }, 20000);
+    }, 10000); // Reduced from 20s to 10s
 
     // Local keyboard shortcuts for player
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -281,8 +282,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               }
               break;
             case Hls.ErrorTypes.OTHER_ERROR:
-              setError(`Engine Error: ${data.details}. This channel might use an unsupported codec (like H.265/HEVC or AC3 audio) in your browser.`);
+              console.log('Other error, skipping to next channel');
               setIsLoading(false);
+              onNext();
               break;
             default:
               console.log('Fatal error, skipping to next channel');
@@ -309,6 +311,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       });
       video.addEventListener('error', () => {
         if (loadTimeout) window.clearTimeout(loadTimeout);
+        console.log('Native HLS error, skipping to next channel');
         updateStreamHealth('failed');
         setIsLoading(false);
         onNext();
@@ -330,6 +333,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
       const handleError = () => {
         if (loadTimeout) window.clearTimeout(loadTimeout);
+        console.log('Direct video playback error, skipping to next channel');
         updateStreamHealth('failed');
         setIsLoading(false);
         onNext();
@@ -460,7 +464,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
             <div className="flex items-center gap-2 sm:gap-4 overflow-hidden">
               {channel.logo && (
-                <div className="w-10 h-10 sm:w-14 sm:h-14 bg-cyan-400 rounded-lg sm:rounded-2xl p-1.5 sm:p-2.5 flex items-center justify-center border border-white/10 flex-shrink-0">
+                <div className="w-10 h-10 sm:w-14 sm:h-14 bg-black rounded-lg sm:rounded-2xl p-1.5 sm:p-2.5 flex items-center justify-center border-2 border-white/20 flex-shrink-0">
                   <img src={channel.logo} className="w-full h-full object-contain filter drop-shadow-lg" alt="" />
                 </div>
               )}
@@ -564,8 +568,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         </div>
       )}
 
-      {/* Error UI Overlay */}
-      {error && (
+      {/* Error UI Overlay - Hidden, errors auto-skip */}
+      {error && false && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-[20px] z-[70] p-8 text-center animate-in fade-in duration-500">
           <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mb-8 border border-red-500/20">
             <Monitor className="text-red-500" size={40} />
