@@ -105,6 +105,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
                   src={channel.logo}
                   alt={channel.name}
                   loading="lazy"
+                  decoding="async"
                   onLoad={() => setImgLoaded(true)}
                   className={`max-w-full max-h-full object-contain transition-all duration-700 ${
                     imgLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
@@ -114,8 +115,9 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
               </div>
             </>
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center text-white/20 bg-cyan-400">
+            <div className="w-full h-full flex flex-col items-center justify-center text-white/30 bg-cyan-400">
               <GroupIcon size={64} strokeWidth={1.5} />
+              <p className="text-xs font-bold mt-3 text-white/40 uppercase tracking-wider">{channel.name}</p>
             </div>
           )}
 
@@ -221,4 +223,4 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
   );
 };
 
-export default ChannelCard;
+export default React.memo(ChannelCard);

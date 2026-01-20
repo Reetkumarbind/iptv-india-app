@@ -63,12 +63,15 @@ const RecentlyWatched: React.FC<RecentlyWatchedProps> = ({
                     <img
                       src={item.logo}
                       alt={item.channelName}
+                      loading="lazy"
+                      decoding="async"
                       className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-700"
                     />
                   </div>
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-cyan-400">
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-cyan-400 text-white/30">
                     <Play className="text-white/20" size={32} />
+                    <p className="text-xs font-bold mt-2 text-white/40 uppercase tracking-wider px-2 text-center">{item.channelName}</p>
                   </div>
                 )}
 

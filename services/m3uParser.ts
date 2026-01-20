@@ -4,10 +4,13 @@ import { IPTVChannel } from '../types.ts';
 export const fetchAndParseM3U = async (url: string): Promise<IPTVChannel[]> => {
   let text = '';
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // Reduced to 10s for faster timeout
 
   try {
-    const response = await fetch(url, { signal: controller.signal });
+    const response = await fetch(url, { 
+      signal: controller.signal,
+      cache: 'force-cache' // Use cache for faster loading
+    });
     clearTimeout(timeoutId);
     if (!response.ok) {
       throw new Error(`Network Error: Server responded with ${response.status} (${response.statusText})`);
@@ -50,12 +53,8 @@ export const fetchAndParseM3U = async (url: string): Promise<IPTVChannel[]> => {
         const id = idMatch ? idMatch[1].replace(/[<>]/g, '') : `channel-${i}`;
         const language = langMatch ? langMatch[1].replace(/[<>]/g, '') : 'General';
 
-        // Specific logo replacement logic
-        let logo = logoMatch ? logoMatch[1].replace(/[<>]/g, '') : null;
-        // Keep original 4TV logo instead of replacing it
-        // if (logo === 'https://jiotvimages.cdn.jio.com/dare_images/images/4_TV.png') {
-        //   logo = 'https://reetkumarbind.netlify.app/reet.JPG';
-        // }
+        // Keep original logos
+        const logo = logoMatch ? logoMatch[1].replace(/[<>]/g, '') : null;
 
         currentChannel = {
           id: id || `channel-${i}`,

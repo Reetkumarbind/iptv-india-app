@@ -67,9 +67,9 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
   const [trendingChannels, setTrendingChannels] = useState<string[]>([]);
   const [isVoiceSupported, setIsVoiceSupported] = useState(false);
 
-  // Pagination State - Responsive based on screen size
+  // Pagination State - Start with fewer channels for faster initial load
   const getInitialCount = () => {
-    return 120; // Default to 120 as requested
+    return 40; // Reduced from 120 for faster initial load
   };
   const [visibleCount, setVisibleCount] = useState(getInitialCount());
 
@@ -226,7 +226,7 @@ const ChannelGallery: React.FC<ChannelGalleryProps> = ({ channels, favorites, on
   }, [filteredChannels, visibleCount]);
 
   const handleLoadMore = () => {
-    setVisibleCount(prev => prev + 60); // Load 60 more at a time
+    setVisibleCount(prev => prev + 40); // Load 40 more at a time for better performance
   };
 
   const resetFilters = () => {

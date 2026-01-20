@@ -52,7 +52,7 @@ const App: React.FC = () => {
         setError(null);
         console.log('🚀 Initializing app (Refresh:', refreshKey, ')...');
 
-        // Load favorites
+        // Load favorites first (instant)
         const savedFavorites = StorageService.getFavorites();
         setFavorites(new Set(savedFavorites));
 
@@ -64,11 +64,11 @@ const App: React.FC = () => {
         );
 
         setChannels(validChannels);
+        setIsLoading(false); // Set loading to false immediately after channels are set
         console.log('🎉 App initialized with', validChannels.length, 'channels');
       } catch (err) {
         console.error('❌ App initialization failed:', err);
         setError(err instanceof Error ? err.message : 'Connection failed. Please check your internet.');
-      } finally {
         setIsLoading(false);
       }
     };
