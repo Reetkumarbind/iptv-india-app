@@ -52,9 +52,10 @@ export const fetchAndParseM3U = async (url: string): Promise<IPTVChannel[]> => {
 
         // Specific logo replacement logic
         let logo = logoMatch ? logoMatch[1].replace(/[<>]/g, '') : null;
-        if (logo === 'https://jiotvimages.cdn.jio.com/dare_images/images/4_TV.png') {
-          logo = 'https://reetkumarbind.netlify.app/reet.JPG';
-        }
+        // Keep original 4TV logo instead of replacing it
+        // if (logo === 'https://jiotvimages.cdn.jio.com/dare_images/images/4_TV.png') {
+        //   logo = 'https://reetkumarbind.netlify.app/reet.JPG';
+        // }
 
         currentChannel = {
           id: id || `channel-${i}`,

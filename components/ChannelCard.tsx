@@ -86,42 +86,52 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
         className="w-full h-full flex flex-col text-left"
       >
         {/* Banner/Logo Container - Takes up more space now */}
-        <div className="relative h-[65%] w-full overflow-hidden bg-slate-900">
+        <div className="relative h-[65%] w-full overflow-hidden bg-cyan-400">
           {channel.logo && !imgLoaded && !imgError && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <Loader2 className="animate-spin text-primary/30" size={32} />
+              <Loader2 className="animate-spin text-white/50" size={32} />
             </div>
           )}
 
           {channel.logo && !imgError ? (
-            <img
-              src={channel.logo}
-              alt={channel.name}
-              loading="lazy"
-              onLoad={() => setImgLoaded(true)}
-              className={`w-full h-full object-cover object-[center_30%] transition-all duration-700 group-hover:scale-110 ${imgLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
-                }`}
-              onError={() => setImgError(true)}
-            />
+            <>
+              {!imgLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center bg-cyan-400">
+                  <Loader2 className="animate-spin text-white/50" size={32} />
+                </div>
+              )}
+              <div className="w-full h-full bg-cyan-400 flex items-center justify-center p-8">
+                <img
+                  src={channel.logo}
+                  alt={channel.name}
+                  loading="lazy"
+                  onLoad={() => setImgLoaded(true)}
+                  className={`max-w-full max-h-full object-contain transition-all duration-700 ${
+                    imgLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+                  }`}
+                  onError={() => setImgError(true)}
+                />
+              </div>
+            </>
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center text-white/10 group-hover:text-primary/20 transition-colors bg-gradient-to-br from-slate-900 to-slate-800">
-              <GroupIcon size={64} strokeWidth={1} />
+            <div className="w-full h-full flex flex-col items-center justify-center text-white/20 bg-cyan-400">
+              <GroupIcon size={64} strokeWidth={1.5} />
             </div>
           )}
 
-          {/* Premium Overlay Gradient - Enhanced */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent opacity-90 group-hover:opacity-70 transition-opacity" />
+          {/* Premium Overlay Gradient - Subtle for logo visibility */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
           {/* Interactive States - Larger play button */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 backdrop-blur-sm">
-            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-slate-950 shadow-2xl scale-50 group-hover:scale-100 transition-transform duration-500">
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 bg-black/40 backdrop-blur-sm">
+            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-slate-950 shadow-2xl scale-75 group-hover:scale-100 transition-transform duration-500">
               <Play size={32} fill="currentColor" className="ml-1" />
             </div>
           </div>
 
           {/* Labels Overlay */}
-          <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-            <span className="px-3 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 text-white text-[10px] font-black uppercase tracking-widest">
+          <div className="absolute top-4 left-4 flex flex-wrap gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <span className="px-3 py-1 rounded-lg bg-black/70 backdrop-blur-md border border-white/20 text-white text-[10px] font-black uppercase tracking-widest">
               {channel.group || 'General'}
             </span>
             {currentProgram && (
@@ -144,7 +154,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
         </div>
 
         {/* Enhanced Info Content - More space for details */}
-        <div className="h-[35%] p-6 bg-gradient-to-b from-slate-950 to-slate-900 border-t border-white/10 relative flex flex-col justify-between">
+        <div className="h-[35%] p-6 bg-gradient-to-b from-slate-900 to-black border-t border-white/10 relative flex flex-col justify-between">
           <div>
             <h3 className="text-lg font-black text-white truncate uppercase tracking-wide group-hover:text-primary transition-colors leading-tight mb-2">
               {channel.name}

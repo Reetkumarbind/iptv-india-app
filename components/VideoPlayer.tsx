@@ -460,7 +460,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
             <div className="flex items-center gap-2 sm:gap-4 overflow-hidden">
               {channel.logo && (
-                <div className="w-10 h-10 sm:w-14 sm:h-14 glass rounded-lg sm:rounded-2xl p-1 sm:p-2 flex items-center justify-center border-white/10 flex-shrink-0">
+                <div className="w-10 h-10 sm:w-14 sm:h-14 bg-cyan-400 rounded-lg sm:rounded-2xl p-1.5 sm:p-2.5 flex items-center justify-center border border-white/10 flex-shrink-0">
                   <img src={channel.logo} className="w-full h-full object-contain filter drop-shadow-lg" alt="" />
                 </div>
               )}

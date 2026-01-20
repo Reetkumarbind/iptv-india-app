@@ -59,22 +59,24 @@ const RecentlyWatched: React.FC<RecentlyWatchedProps> = ({
             >
               <div className="relative aspect-video glass-card overflow-hidden mb-3 border-white/5 hover:scale-[1.05] transition-all duration-500 shadow-xl hover:shadow-primary/20">
                 {item.logo ? (
-                  <img
-                    src={item.logo}
-                    alt={item.channelName}
-                    className="w-full h-full object-cover object-[center_30%] group-hover:scale-110 transition-transform duration-700"
-                  />
+                  <div className="w-full h-full bg-cyan-400 flex items-center justify-center p-6">
+                    <img
+                      src={item.logo}
+                      alt={item.channelName}
+                      className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-700"
+                    />
+                  </div>
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-slate-900">
-                    <Play className="text-white/10" size={32} />
+                  <div className="w-full h-full flex items-center justify-center bg-cyan-400">
+                    <Play className="text-white/20" size={32} />
                   </div>
                 )}
 
                 {/* Premium Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-60" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
                 {/* Play overlay */}
-                <div className="absolute inset-0 bg-background/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-sm">
                   <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-2xl">
                     <Play className="text-slate-950 ml-1" size={20} fill="currentColor" />
                   </div>
