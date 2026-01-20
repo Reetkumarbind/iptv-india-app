@@ -14,7 +14,8 @@ import {
   Sparkles,
   LayoutGrid,
   Loader2,
-  Clock
+  Clock,
+  Calendar
 } from 'lucide-react';
 
 interface ChannelCardProps {
@@ -70,14 +71,22 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
     ? ((Date.now() - currentProgram.start) / (currentProgram.end - currentProgram.start)) * 100
     : 0;
 
+  const formatTime = (timestamp: number) => {
+    return new Date(timestamp).toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: true 
+    });
+  };
+
   return (
-    <div className="group relative aspect-[1.586/1] overflow-hidden glass-card hover:scale-[1.03] transition-all duration-500 ease-out shadow-2xl hover:shadow-primary/20">
+    <div className="group relative aspect-[1.586/2] overflow-hidden glass-card hover:scale-[1.02] transition-all duration-500 ease-out shadow-2xl hover:shadow-primary/30">
       <button
         onClick={onClick}
         className="w-full h-full flex flex-col text-left"
       >
-        {/* Banner/Logo Container */}
-        <div className="relative flex-1 w-full overflow-hidden bg-slate-900">
+        {/* Banner/Logo Container - Takes up more space now */}
+        <div className="relative h-[65%] w-full overflow-hidden bg-slate-900">
           {channel.logo && !imgLoaded && !imgError && (
             <div className="absolute inset-0 flex items-center justify-center">
               <Loader2 className="animate-spin text-primary/30" size={32} />
@@ -100,13 +109,13 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
             </div>
           )}
 
-          {/* Premium Overlay Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
+          {/* Premium Overlay Gradient - Enhanced */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent opacity-90 group-hover:opacity-70 transition-opacity" />
 
-          {/* Interactive States */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 backdrop-blur-[2px]">
-            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-slate-950 shadow-2xl scale-50 group-hover:scale-100 transition-transform duration-500">
-              <Play size={28} fill="currentColor" className="ml-1" />
+          {/* Interactive States - Larger play button */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 backdrop-blur-sm">
+            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-slate-950 shadow-2xl scale-50 group-hover:scale-100 transition-transform duration-500">
+              <Play size={32} fill="currentColor" className="ml-1" />
             </div>
           </div>
 
@@ -134,20 +143,48 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, isActive, isFavorite
           )}
         </div>
 
-        {/* Info Content - ATM card style */}
-        <div className="p-5 bg-slate-950 border-t border-white/5 relative">
-          <h3 className="text-base font-bold text-white truncate uppercase tracking-wide group-hover:text-primary transition-colors leading-tight mb-1">
-            {channel.name}
-          </h3>
-          {currentProgram ? (
-            <p className="text-sm font-medium text-slate-400 truncate uppercase tracking-wider">
-              {currentProgram.title}
-            </p>
-          ) : (
-            <p className="text-sm font-medium text-slate-500 truncate uppercase tracking-wider">
-              Premium Content
-            </p>
-          )}
+        {/* Enhanced Info Content - More space for details */}
+        <div className="h-[35%] p-6 bg-gradient-to-b from-slate-950 to-slate-900 border-t border-white/10 relative flex flex-col justify-between">
+          <div>
+            <h3 className="text-lg font-black text-white truncate uppercase tracking-wide group-hover:text-primary transition-colors leading-tight mb-2">
+              {channel.name}
+            </h3>
+            {currentProgram ? (
+              <>
+                <p className="text-sm font-bold text-slate-300 truncate mb-2 leading-relaxed">
+                  {currentProgram.title}
+                </p>
+                <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <Clock size={12} className="flex-shrink-0" />
+                  <span className="font-medium">
+                    {formatTime(currentProgram.start)} - {formatTime(currentProgram.end)}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-slate-400 truncate">
+                  Premium Content
+                </p>
+                <div className="flex items-center gap-2 text-xs text-slate-600">
+                  <Calendar size={12} />
+                  <span>Available 24/7</span>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Channel Quality Badge */}
+          <div className="flex items-center gap-2 mt-3">
+            <span className="px-2 py-1 rounded bg-primary/10 text-primary text-[10px] font-black uppercase tracking-wider border border-primary/20">
+              HD
+            </span>
+            {isFavorite && (
+              <span className="px-2 py-1 rounded bg-red-500/10 text-red-400 text-[10px] font-black uppercase tracking-wider border border-red-500/20">
+                Favorite
+              </span>
+            )}
+          </div>
         </div>
       </button>
 
