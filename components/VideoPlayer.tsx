@@ -433,12 +433,21 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   return (
     <div
       ref={containerRef}
-      className="flex-1 bg-black relative overflow-hidden flex flex-col group cursor-none selection:bg-transparent"
+      className="fixed inset-0 bg-black overflow-hidden flex flex-col group cursor-none selection:bg-transparent"
+      style={{ 
+        cursor: showControls ? 'default' : 'none',
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)',
+        width: '100vw',
+        height: '100vh',
+        height: '100dvh', // Dynamic viewport height for mobile
+      }}
       onMouseMove={resetControlsTimer}
       onTouchStart={resetControlsTimer}
       onTouchEnd={handleTouchEnd}
       onDoubleClick={toggleFullscreen}
-      style={{ cursor: showControls ? 'default' : 'none' }}
     >
       <video
         ref={videoRef}
